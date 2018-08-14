@@ -1,0 +1,186 @@
+# Plugin stuff.
+NAME = Chromium-CppStyle-Assistant
+NAME_SHORT = cc_assistant
+SRCS = cc_assistant.cpp config_settings.cpp constants.cpp
+
+# System stuff (copied and adopted from Far sources).
+TOOLSDIR = far/buildtools/
+
+ifneq ($(shell echo %comspec%),%comspec%)
+ os_name = $(subst /,\,$(1))
+ UTILS_PREFIX = $(call os_name,$(TOOLSDIR)gnu.cmd)
+ TOOLS_PREFIX = $(TOOLSDIR)
+ HOST_TYPE = Windows
+else
+ os_name = $(1)
+ HOST_TYPE = $(shell uname -o)
+ ifneq (Msys,$(HOST_TYPE))
+  ifneq (Cygwin,$(HOST_TYPE))
+   HOST_TYPE = Unix
+   WINE_CMD = wine #space required
+  endif
+ else
+  TOOLS_PREFIX = $(TOOLSDIR)
+  HOST_TYPE = Windows
+ endif
+endif
+
+LS=$(UTILS_PREFIX)ls
+MKDIR = $(UTILS_PREFIX)mkdir -p
+RM = $(UTILS_PREFIX)rm -f
+CP = $(UTILS_PREFIX)cp -f
+MV = $(UTILS_PREFIX)mv -f
+
+CXX = $(GCC_PREFIX)g++$(DW2)
+CC = $(GCC_PREFIX)gcc$(DW2)
+WINDRES = $(GCC_PREFIX)windres
+DLLTOOL = $(GCC_PREFIX)dlltool
+RANLIB = $(GCC_PREFIX)ranlib
+AR = $(GCC_PREFIX)ar
+
+ifndef DIRBIT
+ ifneq (,$(findstring i686-w64,$(shell $(CC) -dumpmachine)))
+  DIRBIT = 32
+ else
+  ifeq (,$(findstring 64,$(shell $(CC) -dumpmachine)))
+   DIRBIT = 32
+  else
+   DIRBIT = 64
+  endif
+ endif
+endif
+
+GAWK = $(strip $(call os_name, $(TOOLS_PREFIX)gawk))
+
+ifeq ($(DIRBIT),32)
+ WINDRES += -F pe-i386
+else
+ WINDRES += -F pe-x86-64
+endif
+
+DEP_FILTER := $(TOOLSDIR)dep_filter.awk
+
+RCWIDE = -D UNICODE -D _UNICODE
+CXXWIDE = -D UNICODE -D _UNICODE
+CCWIDE = -D UNICODE -D _UNICODE
+
+ifndef DEBUG
+DIRNAME := final
+C_DEBUG := -Os -fomit-frame-pointer -DNDEBUG
+L_DEBUG := -s
+else
+DIRNAME := debug
+C_DEBUG := -O0 -g -D_DEBUG
+L_DEBUG := -O0 -g
+endif
+
+BASEDIR = ./$(DIRNAME).$(DIRBIT).gcc
+OBJDIR := $(BASEDIR)/obj
+REOBJDIR = \.\/$(DIRNAME)\.$(DIRBIT)\.gcc\/obj\/
+DLLDIR ?= $(BASEDIR)$(ADDOUTDIR)
+COMINC = far/pluginapi
+EXT ?= dll
+DLLNAME = $(NAME).$(EXT)
+DLLFULLNAME = $(DLLDIR)/$(DLLNAME)
+
+ifeq ($(DIRBIT),32)
+DLLTOOL_M = i386
+else
+DLLTOOL_M = i386:x86-64
+endif
+
+ifndef DEF_NAME
+DEF_NAME = $(NAME_SHORT)
+endif
+ifeq ($(DEF_NAME),-)
+DEF =
+DEF_OPT =
+else
+DEF = $(NAME_SHORT).def
+DEF_OPT = -d $(DEF)
+endif
+
+RC_NAME ?= $(NAME_SHORT)
+RES = $(OBJDIR)/$(NAME_SHORT).res.o
+
+NOSTART = $(if $(NOENTRY),-nostartfiles,)
+NODEFLIBS = $(if $(NODEFLIB),-nodefaultlibs,)
+
+ifdef INCLUDECRT
+ifeq ($(DIRBIT),32)
+COMMONLIB = -lCRT
+else
+COMMONLIB = -lCRT64
+endif
+else
+COMMONLIB = 
+endif
+
+C_FLAGS  := -m$(DIRBIT) -Wall -funsigned-char $(C_DEBUG) -fstrict-aliasing -fno-exceptions
+CXXFLAGS := $(C_FLAGS) -std=c++1z -fno-rtti -I $(COMINC) $(CXXWIDE) $(USERCPP)
+CCFLAGS  := $(C_FLAGS) -I $(COMINC) $(CCWIDE) $(USERCPP)
+LNKFLAGS := -m$(DIRBIT) $(L_DEBUG) $(NOSTART) $(NODEFLIBS) \
+            -static-libgcc -static \
+            $(USERLIBSFIRST) $(COMMONLIB) \
+            -luser32 -lkernel32 -ladvapi32 -lshell32 -lole32 \
+            $(USERLIBS)
+RCFLAGS  := -I $(COMINC) $(RCWIDE) $(USERRC)
+
+C_OBJS = $(patsubst %.c,$(OBJDIR)/%.o,$(filter %.c,$(SRCS)))
+CPP_OBJS = $(patsubst %.cpp,$(OBJDIR)/%.o,$(filter %.cpp,$(SRCS)))
+OBJS = $(strip $(C_OBJS) $(CPP_OBJS) $(RES))
+ifndef DISABLEAUTODEPS
+C_DEPS = $(patsubst %.c,$(OBJDIR)/%.d,$(filter %.c,$(SRCS)))
+CPP_DEPS = $(patsubst %.cpp,$(OBJDIR)/%.d,$(filter %.cpp,$(SRCS)))
+DEPS = $(strip $(C_DEPS) $(CPP_DEPS))
+endif
+MAP = $(patsubst %.$(EXT),%.map,$(DLLFULLNAME))
+
+all: $(DLLFULLNAME)
+
+ifndef DISABLEAUTODEPS
+ifeq ($(findstring clean,$(MAKECMDGOALS)),)
+$(OBJDIR)/%.d: %.cpp
+	@echo making depends for $<
+	@$(MKDIR) $(@D)
+	@$(CXX) -c -MM $(CXXFLAGS) $< | $(GAWK) -f $(DEP_FILTER) -v n=$(notdir $(basename $@)) -v r=$(OBJDIR) > $(call os_name,$@)
+
+$(OBJDIR)/%.d: %.c
+	@echo making depends for $<
+	@$(MKDIR) $(@D)
+	@$(CC) -c -MM $(CCFLAGS) $< | $(GAWK) -f $(DEP_FILTER) -v n=$(notdir $(basename $@)) -v r=$(OBJDIR) > $(call os_name,$@)
+endif
+endif
+
+$(OBJDIR)/%.o: %.cpp
+	@echo compiling $<
+	@$(MKDIR) -p $(@D)
+	@$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+$(OBJDIR)/%.o: %.c
+	@echo compiling $<
+	@$(MKDIR) -p $(@D)
+	@$(CC) $(CCFLAGS) -c -o $@ $<
+
+$(RES): $(RC_NAME).rc $(COMINC)/FarVersion.hpp $(COMINC)/Plugin.hpp
+	@echo compiling $<
+	@$(MKDIR) -p $(@D)
+	@$(WINDRES) $(RCFLAGS) -i $< -o $@
+
+X_OPT = $(if $(MAP),-Xlinker -Map -Xlinker $(MAP),)
+
+$(DLLFULLNAME): $(OBJS) $(DEF)
+	@echo linking $@
+	@$(MKDIR) -p $(@D)
+	@$(CXX) -o $@ $(DEF) $(OBJS) $(LNKFLAGS) -Wl,--kill-at -Wl,--enable-stdcall-fixup -shared $(X_OPT)
+	@echo copy distrib files
+	@$(CP) distrib/* $(DLLDIR)
+
+ifndef SKIPCLEAN
+clean:
+	@$(RM) -r $(BASEDIR)/obj $(BASEDIR)/lib $(BASEDIR)/Formats $(BASEDIR)/*
+endif
+
+ifndef DISABLEAUTODEPS
+-include $(DEPS)
+endif
