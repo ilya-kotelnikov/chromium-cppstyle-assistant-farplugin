@@ -254,15 +254,6 @@ extern "C" intptr_t WINAPI ProcessEditorEventW(
   return 0;
 }
 
-extern "C" intptr_t WINAPI ProcessEditorInputW(
-    const ProcessEditorInputInfo* info) {
-  return 0;
-}
-
-// Free all the internal structures on shutdown.
-extern "C" void WINAPI ExitFARW(const ExitInfo* info) {
-}
-
 // Avoid loading into Far2.
 extern "C" int WINAPI GetMinFarVersionW() {
   #define MAKEFARVERSION_IN_OLD_FORMAT(major, minor, build) \
