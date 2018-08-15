@@ -106,7 +106,10 @@ int GetCommandIdForMacroString(const wchar_t* macro_string_value) {
   return result_command_id;
 }
 
-void HighlightLineLimitColumn(intptr_t editor_id) {
+void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
+  if (!g_opt.highlight_linelimit_column)
+    return;
+
   EditorInfo editor_info = { sizeof(EditorInfo) };
   g_info.EditorControl(editor_id, ECTL_GETINFO, 0, &editor_info);
 
@@ -241,7 +244,7 @@ extern "C" intptr_t WINAPI ProcessEditorEventW(
     const ProcessEditorEventInfo* info) {
   switch (info->Event) {
     case EE_REDRAW:
-      cc_assistant::HighlightLineLimitColumn(info->EditorID);
+      cc_assistant::HighlightLineLimitColumnIfEnabled(info->EditorID);
       return 1;
 
     default:
