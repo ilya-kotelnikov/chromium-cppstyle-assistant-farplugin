@@ -22,6 +22,9 @@
 
 namespace {
 
+constexpr intptr_t kNoEditorId = -2;
+constexpr intptr_t kCurrentEditorId = -1;
+
 PluginStartupInfo g_info;
 FarStandardFunctions g_fsf;
 cc_assistant::ConfigSettings g_opt;
@@ -33,6 +36,15 @@ const wchar_t* GetMsg(int msg_id) {
 }  // namespace
 
 namespace cc_assistant {
+
+void ActualizePluginSettingsAndRedrawEditor(intptr_t editor_id) {
+  PluginSettings far_settings_storage(MainGuid, g_info.SettingsControl);
+  g_opt.LoadFromFarStorage(far_settings_storage);
+
+  // Redraw the editor to visualize updated plugin settings.
+  if (editor_id != kNoEditorId)
+    g_info.EditorControl(editor_id, ECTL_REDRAW, 0, 0);
+}
 
 bool ShowConfigDialog() {
   PluginDialogBuilder Builder(
@@ -169,16 +181,25 @@ extern "C" void WINAPI SetStartupInfoW(const PluginStartupInfo* info) {
   g_fsf = (*info->FSF);
   g_info.FSF = &g_fsf;
 
-  // Load current plugin settings from the Far storage.
-  PluginSettings far_settings_storage(MainGuid, g_info.SettingsControl);
-  g_opt.LoadFromFarStorage(far_settings_storage);
+  // Initialize plugin settings from the Far storage.
+  cc_assistant::ActualizePluginSettingsAndRedrawEditor(kNoEditorId);
 }
 
 extern "C" intptr_t WINAPI ConfigureW(const ConfigureInfo* info) {
+  // As it's an external call, firstly ensure we have the latest plugin
+  // settings from the Far storage - they could be changed by another Far
+  // instance.
+  cc_assistant::ActualizePluginSettingsAndRedrawEditor(kCurrentEditorId);
+
   return cc_assistant::ShowConfigDialog() ? 1 : 0;
 }
 
 extern "C" HANDLE WINAPI OpenW(const OpenInfo* open_info) {
+  // As it's an external call, firstly ensure we have the latest plugin
+  // settings from the Far storage - they could be changed by another Far
+  // instance.
+  cc_assistant::ActualizePluginSettingsAndRedrawEditor(kCurrentEditorId);
+
   // Plugin is called to do an action: chose behaviour depending on where it
   // comes from.
   int command_id = -1;
@@ -245,7 +266,14 @@ extern "C" intptr_t WINAPI ProcessEditorEventW(
   switch (info->Event) {
     case EE_REDRAW:
       cc_assistant::HighlightLineLimitColumnIfEnabled(info->EditorID);
-      return 1;
+      break;
+
+    case EE_GOTFOCUS:
+      // Actualize plugin settings from the Far storage as another plugin
+      // instance (in another Far process) could change them while this
+      // instance was in "background".
+      cc_assistant::ActualizePluginSettingsAndRedrawEditor(info->EditorID);
+      break;
 
     default:
       break;
