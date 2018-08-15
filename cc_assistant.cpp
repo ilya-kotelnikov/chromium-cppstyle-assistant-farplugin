@@ -130,16 +130,26 @@ void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
     if (curr_visible_line_index >= editor_info.TotalLines)
       break;
 
+    // Watch for tabs in the line: ensure the target column is right.
+    EditorConvertPos ecp = { sizeof(EditorConvertPos) };
+    ecp.StringNumber = curr_visible_line_index;
+    ecp.SrcPos = g_opt.highlight_linelimit_column_index;
+    g_info.EditorControl(editor_id, ECTL_TABTOREAL, 0, &ecp);
+    const intptr_t adjusted_linelimit_column_index = ecp.DestPos;
+    const bool tabs_detected =
+        adjusted_linelimit_column_index !=
+            g_opt.highlight_linelimit_column_index;
+
     EditorColor ec = { sizeof(EditorColor) };
     ec.StringNumber = curr_visible_line_index;
     ec.ColorItem = -1;
-    ec.StartPos = g_opt.highlight_linelimit_column_index;
-    ec.EndPos = g_opt.highlight_linelimit_column_index;
+    ec.StartPos = adjusted_linelimit_column_index;
+    ec.EndPos = adjusted_linelimit_column_index;
     ec.Priority = EDITOR_COLOR_NORMAL_PRIORITY;
-    ec.Flags = ECF_TABMARKFIRST | ECF_AUTODELETE;
-    ec.Color.Flags = FCF_FG_4BIT | FCF_BG_4BIT;
-    ec.Color.ForegroundColor = 0x701050F0;  // ABGR -> red.
-    ec.Color.BackgroundColor = 0x00000000;  // ABGR -> black. 
+    ec.Flags = ECF_AUTODELETE;
+    ec.Color.Flags = 0;
+    ec.Color.ForegroundColor = 0x00ffffff;  // 0x00bbggrr.
+    ec.Color.BackgroundColor = (tabs_detected) ? 0x000000ff : 0x00000000; 
     ec.Owner = MainGuid;
     g_info.EditorControl(editor_id, ECTL_ADDCOLOR, 0, &ec);
   }
