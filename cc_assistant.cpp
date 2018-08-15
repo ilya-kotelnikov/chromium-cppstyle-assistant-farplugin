@@ -52,11 +52,6 @@ bool ShowConfigDialog() {
   // Passing 3 here to remove 'weird' space between the controls.
   linelimit_editbox->X1 += 3;
   linelimit_editbox->X2 += 3;
-  Builder.AddSeparator();
-
-  // Add "detect whitespaces at line ends" controls.
-  Builder.AddCheckbox(kMDetectWhitespacesAtLineEndsOption,
-                      &g_opt.detect_whitespaces_at_line_ends);
 
   // Add standard dialog buttons.
   Builder.AddOKCancel(kMSave, kMCancel);

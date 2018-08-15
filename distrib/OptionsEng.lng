@@ -1,16 +1,10 @@
 ﻿.Language=English,English
 
-"Chromium CppStyle Assistant"
-
-"&Highlight line-limit column"
-"&Detect whitespaces at line ends"
-
+"Chromium C++ Assistant"
 "&Configure"
 
-"Configure Chromium CppStyle Assistant"
+"Configure Chromium C++ Assistant"
 "Highlight line-limit &column"
 "&Line-limit:"
-"Highlight &whitespaces at line ends"
-
 "Save"
 "Cancel"

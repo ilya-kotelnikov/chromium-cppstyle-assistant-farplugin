@@ -13,17 +13,11 @@ namespace cc_assistant {
 // files.
 enum {
   kMTitle,
-
-  kMHighlightLineLimitColumn,
-  kMDetectWhitespacesAtLineEnds,
-
   kMConfigure,
 
   kMTitleConfig,
   kMHighlightLineLimitColumnOption,
   kMHighlightLineLimitColumnIndexOption,
-  kMDetectWhitespacesAtLineEndsOption,
-
   kMSave,
   kMCancel,
 };

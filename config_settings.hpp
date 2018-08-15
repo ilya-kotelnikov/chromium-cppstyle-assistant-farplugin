@@ -18,9 +18,6 @@ struct ConfigSettings {
   // Line-limit column number to highlight.
   unsigned int highlight_linelimit_column_index;
 
-  // Highlight or not whitespaces at line ends.
-  int detect_whitespaces_at_line_ends;
-
   ConfigSettings();
 
   void LoadFromFarStorage(/*const*/ PluginSettings& storage);

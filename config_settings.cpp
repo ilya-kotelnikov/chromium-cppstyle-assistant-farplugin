@@ -17,9 +17,7 @@ ConfigSettings::ConfigSettings()
     : highlight_linelimit_column(
           kHighlightLineLimitColumnSettingDefault),
       highlight_linelimit_column_index(
-          kHighlightLineLimitColumnIndexSettingDefault),
-      detect_whitespaces_at_line_ends(
-          kDetectWhitespacesAtLineEndsSettingDefault) {
+          kHighlightLineLimitColumnIndexSettingDefault) {
 }
 
 void ConfigSettings::LoadFromFarStorage(/*const*/ PluginSettings& storage) {
@@ -29,9 +27,6 @@ void ConfigSettings::LoadFromFarStorage(/*const*/ PluginSettings& storage) {
   highlight_linelimit_column_index =
       storage.Get(0, kHighlightLineLimitColumnIndexSettingName,
                      kHighlightLineLimitColumnIndexSettingDefault);
-  detect_whitespaces_at_line_ends =
-      storage.Get(0, kDetectWhitespacesAtLineEndsSettingName,
-                     kDetectWhitespacesAtLineEndsSettingDefault);
 }
 
 void ConfigSettings::SaveToFarStorage(PluginSettings* storage) const {
@@ -39,8 +34,6 @@ void ConfigSettings::SaveToFarStorage(PluginSettings* storage) const {
                   highlight_linelimit_column);
   storage->Set(0, kHighlightLineLimitColumnIndexSettingName,
                   highlight_linelimit_column_index);
-  storage->Set(0, kDetectWhitespacesAtLineEndsSettingName,
-                  detect_whitespaces_at_line_ends);
 }
 
 }  // namespace cc_assistant

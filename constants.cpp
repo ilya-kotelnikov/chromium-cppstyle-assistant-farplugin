@@ -12,6 +12,3 @@ const wchar_t kHighlightLineLimitColumnSettingName[] =
 
 const wchar_t kHighlightLineLimitColumnIndexSettingName[] =
     L"HighlightLineLimitColumnIndex";
-
-const wchar_t kDetectWhitespacesAtLineEndsSettingName[] =
-    L"DetectWhitespacesAtLineEnds";

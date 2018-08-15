@@ -12,8 +12,6 @@
 //
 extern const wchar_t kHighlightLineLimitColumnSettingName[];
 extern const wchar_t kHighlightLineLimitColumnIndexSettingName[];
-extern const wchar_t kDetectWhitespacesAtLineEndsSettingName[];
 
 constexpr int kHighlightLineLimitColumnSettingDefault = 1;
 constexpr unsigned int kHighlightLineLimitColumnIndexSettingDefault = 80U;
-constexpr int kDetectWhitespacesAtLineEndsSettingDefault = 1;

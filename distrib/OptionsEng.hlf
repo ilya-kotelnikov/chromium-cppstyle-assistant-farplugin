@@ -2,26 +2,21 @@
 .PluginContents=Chromium CppStyle Assistant
 
 @Contents
-$ #Chromium CppStyle Assistant#
+$ #Chromium C++ Assistant#
 
   This plugin provides a C++ developer, using FarManager as IDE to code in
   accordance to Chromium C++ style guide, with the following features:
 
-    + it highlights column 80 permanently;
-    + it watches for whitespaces appearing at line ends and highlights them.
+    + it highlights column 80 permanently.
 
   ~Configure~@Configure@
 
 @Configure
-$ #Chromium CppStyle Assistant - Configure#
+$ #Configure Chromium C++ Assistant#
 
    #Highlight#              If this option is enabled, the plugin highlights
    #line-limit column#      the line-limit column.
 
    #Line-limit:#            Set the line-limit number. Default: 80.
-
-   #Highlight whitespaces#  If this option is enabled, the plugin watches for
-   #at line ends#           whitespaces appearing at line ends and highlights
-                          them.
 
   ~Contents~@Contents@
