@@ -125,6 +125,13 @@ void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
   EditorInfo editor_info = { sizeof(EditorInfo) };
   g_info.EditorControl(editor_id, ECTL_GETINFO, 0, &editor_info);
 
+  // Optimization: do nothing if the column is out of screen at all.
+  if (editor_info.LeftPos > g_opt.highlight_linelimit_column_index ||
+      editor_info.LeftPos + editor_info.WindowSizeX <
+          g_opt.highlight_linelimit_column_index) {
+    return;
+  }
+
   for (intptr_t i = 0; i < editor_info.WindowSizeY; ++i) {
     const intptr_t curr_visible_line_index = editor_info.TopScreenLine + i;
     if (curr_visible_line_index >= editor_info.TotalLines)
