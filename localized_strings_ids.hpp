@@ -15,9 +15,15 @@ enum {
   kMTitle,
   kMConfigure,
 
-  kMTitleConfig,
-  kMHighlightLineLimitColumnOption,
+  kMConfigTitle,
+  kMHighlightLineLimitColumnFeature,
+  kMHighlightLineLimitColumnEnabledOption,
   kMHighlightLineLimitColumnIndexOption,
+  kMHighlightLineLimitColumnForecolorOption,
+  kMHighlightLineLimitColumnBackcolorOption,
+  kMHighlightLineLimitColumnBackcolorIfTabsOption,
+  kMHighlightLineLimitColumnFileMasksOption,
+
   kMSave,
   kMCancel,
 };

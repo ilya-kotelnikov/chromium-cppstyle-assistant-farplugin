@@ -1,9 +1,14 @@
 # Plugin stuff.
 NAME = Chromium-CppStyle-Assistant
 NAME_SHORT = cc_assistant
-SRCS = cc_assistant.cpp config_settings.cpp constants.cpp
+SRCS = cc_assistant.cpp \
+       config_settings.cpp \
+       constants.cpp \
+       dlgbuilderex/bindings/plugin_color_edit_field_binding.cpp \
+       dlgbuilderex/plugin_dialog_builder_ex.cpp \
 
 # System stuff (copied and adopted from Far sources).
+MAKEFILEDIR=$(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 TOOLSDIR = far/buildtools/
 
 ifneq ($(shell echo %comspec%),%comspec%)
@@ -117,7 +122,7 @@ COMMONLIB =
 endif
 
 C_FLAGS  := -m$(DIRBIT) -Wall -funsigned-char $(C_DEBUG) -fstrict-aliasing -fno-exceptions
-CXXFLAGS := $(C_FLAGS) -std=c++1z -fno-rtti -I $(COMINC) $(CXXWIDE) $(USERCPP)
+CXXFLAGS := $(C_FLAGS) -std=c++1z -fno-rtti -I . -I $(COMINC) $(CXXWIDE) $(USERCPP)
 CCFLAGS  := $(C_FLAGS) -I $(COMINC) $(CCWIDE) $(USERCPP)
 LNKFLAGS := -m$(DIRBIT) $(L_DEBUG) $(NOSTART) $(NODEFLIBS) \
             -static-libgcc -static \
@@ -143,12 +148,16 @@ ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 $(OBJDIR)/%.d: %.cpp
 	@echo making depends for $<
 	@$(MKDIR) $(@D)
-	@$(CXX) -c -MM $(CXXFLAGS) $< | $(GAWK) -f $(DEP_FILTER) -v n=$(notdir $(basename $@)) -v r=$(OBJDIR) > $(call os_name,$@)
+	@$(CXX) -c -MM $(CXXFLAGS) $< | \
+            $(GAWK) -f $(DEP_FILTER) -v n=$(notdir $(basename $@)) \
+                                     -v r=$(patsubst %/,%,$(dir $@)) > $(call os_name,$@)
 
 $(OBJDIR)/%.d: %.c
 	@echo making depends for $<
 	@$(MKDIR) $(@D)
-	@$(CC) -c -MM $(CCFLAGS) $< | $(GAWK) -f $(DEP_FILTER) -v n=$(notdir $(basename $@)) -v r=$(OBJDIR) > $(call os_name,$@)
+	@$(CC) -c -MM $(CCFLAGS) $< | \
+            $(GAWK) -f $(DEP_FILTER) -v n=$(notdir $(basename $@)) \
+                                     -v r=$(patsubst %/,%,$(dir $@)) > $(call os_name,$@)
 endif
 endif
 

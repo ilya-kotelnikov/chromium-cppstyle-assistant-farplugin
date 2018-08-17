@@ -7,16 +7,27 @@
 
 #pragma once
 
+#include <string>
+
+#include <windows.h>  // for COLORREF.
+
 class PluginSettings;
 
 namespace cc_assistant {
 
 struct ConfigSettings {
-  // Highlight or not line-limit column.
-  int highlight_linelimit_column;
+  // "Highlight line-limit column" feature settings.
+  struct HighlightLineLimitColumnSettings {
+    int enabled;
+    unsigned int column_index;
+    COLORREF forecolor, backcolor, backcolor_if_tabs;
+    // TODO: use SimpleString to decrease binary size?
+    std::wstring file_masks;
 
-  // Line-limit column number to highlight.
-  unsigned int highlight_linelimit_column_index;
+    HighlightLineLimitColumnSettings();
+  };
+
+  HighlightLineLimitColumnSettings highlight_linelimit_column_settings; 
 
   ConfigSettings();
 

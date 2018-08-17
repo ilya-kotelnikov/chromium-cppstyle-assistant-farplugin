@@ -5,11 +5,10 @@
 // You may use, distribute and modify this code under the terms of GNU GPLv3.
 //------------------------------------------------------------------------------
 
-#include <algorithm>
 #include <array>
-#include <cstring>
+#include <cstring>  // for std::memset
+#include <vector>
 
-#include <DlgBuilder.hpp>
 #include <Plugin.hpp>
 #include <PluginSettings.hpp>
 
@@ -17,6 +16,8 @@
 #include "guid.hpp"
 
 #include "config_settings.hpp"
+#include "constants.hpp"
+#include "dlgbuilderex/plugin_dialog_builder_ex.hpp"
 #include "localized_strings_ids.hpp"
 #include "version.hpp"
 
@@ -37,6 +38,37 @@ const wchar_t* GetMsg(int msg_id) {
 
 namespace cc_assistant {
 
+std::wstring GetEditorFileName(intptr_t editor_id) {
+  const size_t filename_buffer_size =
+       g_info.EditorControl(editor_id, ECTL_GETFILENAME, 0, nullptr);
+  if (filename_buffer_size == 0)
+    return std::wstring();
+
+  std::wstring filename(filename_buffer_size, 0);
+  g_info.EditorControl(editor_id, ECTL_GETFILENAME,
+                       filename_buffer_size, filename.data());
+  filename.resize(filename_buffer_size - 1);  // wstring adds its own null char.
+  return filename;
+}
+
+bool MatchEditorFileNameWithFileMasks(intptr_t editor_id,
+                                      const std::wstring& file_masks) {
+  if (file_masks.empty())  // trivial case.
+    return true;
+
+  const std::wstring filename = GetEditorFileName(editor_id);
+
+  return g_info.FSF->ProcessName(
+             file_masks.c_str(), const_cast<wchar_t*>(filename.c_str()), 0,
+             PN_CMPNAMELIST | PN_SKIPPATH) != 0;
+}
+
+bool ValidateFileMasks(const std::wstring& file_masks) {
+  return file_masks.empty() ||  // trivial case.
+         g_info.FSF->ProcessName(file_masks.c_str(), nullptr, 0,
+                                 PN_CHECKMASK | PN_SHOWERRORMESSAGE) != 0;
+}
+
 void ActualizePluginSettingsAndRedrawEditor(intptr_t editor_id) {
   PluginSettings far_settings_storage(MainGuid, g_info.SettingsControl);
   g_opt.LoadFromFarStorage(far_settings_storage);
@@ -47,29 +79,70 @@ void ActualizePluginSettingsAndRedrawEditor(intptr_t editor_id) {
 }
 
 bool ShowConfigDialog() {
-  PluginDialogBuilder Builder(
-      g_info, MainGuid, ConfigGuid, kMTitleConfig, nullptr);
+  PluginDialogBuilderEx builder(g_info, MainGuid, ConfigGuid,
+                                kMConfigTitle, kConfigHelpTopic);
 
-  // Add "highlight line-limit column" controls.
-  Builder.AddCheckbox(kMHighlightLineLimitColumnOption,
-                      &g_opt.highlight_linelimit_column);
-  FarDialogItem* linelimit_editbox =
-      Builder.AddUIntEditField(&g_opt.highlight_linelimit_column_index, 3);
-  FarDialogItem* linelimit_label =
-      Builder.AddTextBefore(linelimit_editbox,
-                            kMHighlightLineLimitColumnIndexOption);
-  // Place the line-limit controls right under main option label.
-  linelimit_label->X1 += 4;
-  linelimit_label->X2 += 4;
-  // Passing 3 here to remove 'weird' space between the controls.
-  linelimit_editbox->X1 += 3;
-  linelimit_editbox->X2 += 3;
+  auto& hlcs = g_opt.highlight_linelimit_column_settings;
 
-  // Add standard dialog buttons.
-  Builder.AddOKCancel(kMSave, kMCancel);
+  // Add the main setting normally.
+  builder.AddCheckbox(kMHighlightLineLimitColumnEnabledOption, &hlcs.enabled);
+  builder.AddEmptyLine();  // subitems.push_back(builder.AddSeparatorEx());
 
-  if (!Builder.ShowDialog())
-    return false;  // the dialog has been cancelled.
+  // Add it's subsettings aligned with the main checkbox label.
+  std::vector<FarDialogItem*> subitems;
+
+  // Add 'file masks' text field.
+  constexpr int kFileMasksEditFieldWidth = 40;
+  subitems.push_back(
+      builder.AddText(kMHighlightLineLimitColumnFileMasksOption));
+  subitems.push_back(builder.AddStringEditField(&hlcs.file_masks,
+                                                kFileMasksEditFieldWidth));
+
+  // Add a line with the color format hint and then edits for colors: fore, back
+  // and back-if-tabs.
+  FarDialogItem* color_format_hint_item = builder.AddText(L"rrggbb");
+
+  FarDialogItem* forecolor_item = builder.AddColorEditField(&hlcs.forecolor);
+  subitems.push_back(forecolor_item);
+  subitems.push_back(builder.AddTextBefore(
+      subitems.back(), kMHighlightLineLimitColumnForecolorOption));
+
+  subitems.push_back(builder.AddColorEditField(&hlcs.backcolor));
+  subitems.push_back(builder.AddTextBefore(
+      subitems.back(), kMHighlightLineLimitColumnBackcolorOption));
+
+  subitems.push_back(builder.AddColorEditField(&hlcs.backcolor_if_tabs));
+  subitems.push_back(builder.AddTextBefore(
+      subitems.back(), kMHighlightLineLimitColumnBackcolorIfTabsOption));
+
+  builder.AddEmptyLine();
+
+  // Add line-limit column index option.
+  subitems.push_back(builder.AddUIntEditField(&hlcs.column_index, 3));
+  subitems.push_back(builder.AddTextBefore(
+     subitems.back(), kMHighlightLineLimitColumnIndexOption));
+
+  // Finally shift all the subitems by 4 positions to right, so they are aligned
+  // with the main checkbox label.
+  for (FarDialogItem* item : subitems) {
+    item->X1 += 4;
+    item->X2 += 4;
+  }
+
+  // Then align the color format label with the color edit fields.
+  const int color_format_hint_dx =
+      forecolor_item->X1 - color_format_hint_item->X1;
+  color_format_hint_item->X1 += color_format_hint_dx;
+  color_format_hint_item->X2 += color_format_hint_dx;
+
+  builder.AddOKCancel(kMSave, kMCancel);
+
+  do {
+    if (!builder.ShowDialog())
+      return false;  // the dialog has been cancelled.
+
+    // Ensure 'file masks' are correct before accepting the settings.
+  } while (!ValidateFileMasks(hlcs.file_masks));
 
   // Save the updated plugin settings to the Far storage.
   PluginSettings far_settings_storage(MainGuid, g_info.SettingsControl);
@@ -87,7 +160,7 @@ int ShowMenuAndReturnChosenMenuIndex() {
   while(true) {
     const intptr_t menu_result_code =
         g_info.Menu(&MainGuid, nullptr, -1, -1, 0, FMENU_WRAPMODE,
-                    GetMsg(kMTitle), nullptr, L"Contents", nullptr, nullptr,
+                    GetMsg(kMTitle), nullptr, kMenuHelpTopic, nullptr, nullptr,
                     menu_items.data(), menu_items.size());
 
     const int chosen_menu_index = static_cast<int>(menu_result_code);
@@ -119,16 +192,21 @@ int GetCommandIdForMacroString(const wchar_t* macro_string_value) {
 }
 
 void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
-  if (!g_opt.highlight_linelimit_column)
+  auto& hlcs = g_opt.highlight_linelimit_column_settings;
+
+  if (!hlcs.enabled)
+    return;
+
+  // TODO: add optimization here.
+  if (!MatchEditorFileNameWithFileMasks(editor_id, hlcs.file_masks))
     return;
 
   EditorInfo editor_info = { sizeof(EditorInfo) };
   g_info.EditorControl(editor_id, ECTL_GETINFO, 0, &editor_info);
 
   // Optimization: do nothing if the column is out of screen at all.
-  if (editor_info.LeftPos > g_opt.highlight_linelimit_column_index ||
-      editor_info.LeftPos + editor_info.WindowSizeX <
-          g_opt.highlight_linelimit_column_index) {
+  if (editor_info.LeftPos > hlcs.column_index ||
+      editor_info.LeftPos + editor_info.WindowSizeX < hlcs.column_index) {
     return;
   }
 
@@ -140,23 +218,22 @@ void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
     // Watch for tabs in the line: ensure the target column is right.
     EditorConvertPos ecp = { sizeof(EditorConvertPos) };
     ecp.StringNumber = curr_visible_line_index;
-    ecp.SrcPos = g_opt.highlight_linelimit_column_index;
+    ecp.SrcPos = hlcs.column_index;
     g_info.EditorControl(editor_id, ECTL_TABTOREAL, 0, &ecp);
-    const intptr_t adjusted_linelimit_column_index = ecp.DestPos;
-    const bool tabs_detected =
-        adjusted_linelimit_column_index !=
-            g_opt.highlight_linelimit_column_index;
+    const intptr_t adjusted_column_index = ecp.DestPos;
+    const bool tabs_detected = (adjusted_column_index != hlcs.column_index);
 
     EditorColor ec = { sizeof(EditorColor) };
     ec.StringNumber = curr_visible_line_index;
     ec.ColorItem = -1;
-    ec.StartPos = adjusted_linelimit_column_index;
-    ec.EndPos = adjusted_linelimit_column_index;
+    ec.StartPos = adjusted_column_index;
+    ec.EndPos = adjusted_column_index;
     ec.Priority = EDITOR_COLOR_NORMAL_PRIORITY;
     ec.Flags = ECF_AUTODELETE;
     ec.Color.Flags = 0;
-    ec.Color.ForegroundColor = 0x00ffffff;  // 0x00bbggrr.
-    ec.Color.BackgroundColor = (tabs_detected) ? 0x000000ff : 0x00000000; 
+    ec.Color.ForegroundColor = hlcs.forecolor;
+    ec.Color.BackgroundColor = (tabs_detected) ? hlcs.backcolor_if_tabs
+                                               : hlcs.backcolor; 
     ec.Owner = MainGuid;
     g_info.EditorControl(editor_id, ECTL_ADDCOLOR, 0, &ec);
   }
