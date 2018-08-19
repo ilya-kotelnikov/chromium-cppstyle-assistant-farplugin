@@ -12,12 +12,10 @@
 #include <Plugin.hpp>
 #include <PluginSettings.hpp>
 
-#include <initguid.h>
-#include "guid.hpp"
-
 #include "config_settings.hpp"
 #include "constants.hpp"
 #include "dlgbuilderex/plugin_dialog_builder_ex.hpp"
+#include "guids.hpp"
 #include "localized_strings_ids.hpp"
 #include "version.hpp"
 
@@ -31,7 +29,7 @@ FarStandardFunctions g_fsf;
 cc_assistant::ConfigSettings g_opt;
 
 const wchar_t* GetMsg(int msg_id) {
-  return g_info.GetMsg(&MainGuid, msg_id);
+  return g_info.GetMsg(&cc_assistant::g_plugin_guid, msg_id);
 }
 
 }  // namespace
@@ -70,7 +68,7 @@ bool ValidateFileMasks(const std::wstring& file_masks) {
 }
 
 void ActualizePluginSettingsAndRedrawEditor(intptr_t editor_id) {
-  PluginSettings far_settings_storage(MainGuid, g_info.SettingsControl);
+  PluginSettings far_settings_storage(g_plugin_guid, g_info.SettingsControl);
   g_opt.LoadFromFarStorage(far_settings_storage);
 
   // Redraw the editor to visualize updated plugin settings.
@@ -79,7 +77,7 @@ void ActualizePluginSettingsAndRedrawEditor(intptr_t editor_id) {
 }
 
 bool ShowConfigDialog() {
-  PluginDialogBuilderEx builder(g_info, MainGuid, ConfigGuid,
+  PluginDialogBuilderEx builder(g_info, g_plugin_guid, g_config_dialog_guid,
                                 kMConfigTitle, kConfigHelpTopic);
 
   auto& hlcs = g_opt.highlight_linelimit_column_settings;
@@ -145,7 +143,7 @@ bool ShowConfigDialog() {
   } while (!ValidateFileMasks(hlcs.file_masks));
 
   // Save the updated plugin settings to the Far storage.
-  PluginSettings far_settings_storage(MainGuid, g_info.SettingsControl);
+  PluginSettings far_settings_storage(g_plugin_guid, g_info.SettingsControl);
   g_opt.SaveToFarStorage(&far_settings_storage);
   return true;
 }
@@ -159,7 +157,7 @@ int ShowMenuAndReturnChosenMenuIndex() {
 
   while(true) {
     const intptr_t menu_result_code =
-        g_info.Menu(&MainGuid, nullptr, -1, -1, 0, FMENU_WRAPMODE,
+        g_info.Menu(&g_plugin_guid, nullptr, -1, -1, 0, FMENU_WRAPMODE,
                     GetMsg(kMTitle), nullptr, kMenuHelpTopic, nullptr, nullptr,
                     menu_items.data(), menu_items.size());
 
@@ -234,7 +232,7 @@ void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
     ec.Color.ForegroundColor = hlcs.forecolor;
     ec.Color.BackgroundColor = (tabs_detected) ? hlcs.backcolor_if_tabs
                                                : hlcs.backcolor; 
-    ec.Owner = MainGuid;
+    ec.Owner = g_plugin_guid;
     g_info.EditorControl(editor_id, ECTL_ADDCOLOR, 0, &ec);
   }
 }
@@ -249,7 +247,7 @@ extern "C" void WINAPI GetGlobalInfoW(GlobalInfo* info) {
   info->StructSize = sizeof(GlobalInfo);
   info->MinFarVersion = FARMANAGERVERSION;
   info->Version = PLUGIN_VERSION;
-  info->Guid = MainGuid;
+  info->Guid = cc_assistant::g_plugin_guid;
   info->Title = PLUGIN_NAME;
   info->Description = PLUGIN_DESC;
   info->Author = PLUGIN_AUTHOR;
@@ -260,11 +258,11 @@ extern "C" void WINAPI GetPluginInfoW(PluginInfo* info) {
   info->Flags = PF_EDITOR | PF_DISABLEPANELS;
 
   static const wchar_t* eternal_title_string = GetMsg(cc_assistant::kMTitle);
-  info->PluginMenu.Guids = &MenuGuid;
+  info->PluginMenu.Guids = &cc_assistant::g_menu_guid;
   info->PluginMenu.Strings = &eternal_title_string;
   info->PluginMenu.Count = 1;
 
-  info->PluginConfig.Guids = &ConfigGuid;
+  info->PluginConfig.Guids = &cc_assistant::g_config_dialog_guid;
   info->PluginConfig.Strings = &eternal_title_string;
   info->PluginConfig.Count = 1;
 }

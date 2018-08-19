@@ -9,6 +9,8 @@
 
 #include <windows.h>  // for COLORREF and RGB().
 
+namespace cc_assistant {
+
 ////////////////////////////////////////////////////////////////////////////////
 // Help topics.
 //
@@ -35,3 +37,5 @@ constexpr COLORREF kHighlightLineLimitColumnBackcolorSettingDefault =
 constexpr COLORREF kHighlightLineLimitColumnBackcolorIfTabsSettingDefault =
     RGB(0xff, 0x00, 0x00);  // Red.
 extern const wchar_t kHighlightLineLimitColumnFileMasksSettingDefault[];
+
+}  // namespace cc_assistant

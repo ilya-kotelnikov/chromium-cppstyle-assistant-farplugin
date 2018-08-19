@@ -7,6 +7,8 @@
 
 #include "constants.hpp"
 
+namespace cc_assistant {
+
 ////////////////////////////////////////////////////////////////////////////////
 // Help topics.
 //
@@ -33,3 +35,5 @@ const wchar_t kHighlightLineLimitColumnFileMasksSettingName[] =
 
 const wchar_t kHighlightLineLimitColumnFileMasksSettingDefault[] =
     L"*.c;*.cc;*.cpp;*.h;*.hh;*.hpp;";
+
+}  // namespace cc_assistant
