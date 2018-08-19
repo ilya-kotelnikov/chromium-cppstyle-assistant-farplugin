@@ -27,13 +27,13 @@ PluginColorEditFieldBinding::PluginColorEditFieldBinding(
     : PluginGenericEditFieldBinding<COLORREF>(
           plugin_startup_info, dialog_handle, item_id, option_var) {
   SetColorValueToHexString(*option_var_,
-                           initial_value_as_string_.data(),
-                           initial_value_as_string_.size());
+                           initial_value_as_string_,
+                           kColorEditFieldValueWidth + 1);
 }
 
 const wchar_t*
 PluginColorEditFieldBinding::GetInitialValueAsStringData() const {
-  return initial_value_as_string_.data();
+  return initial_value_as_string_;
 }
 
 void PluginColorEditFieldBinding::SetResultValueFromStringData(

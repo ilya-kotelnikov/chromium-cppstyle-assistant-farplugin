@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include <array>
-
 #include <windows.h>  // for COLORREF.
 
 #include "dlgbuilderex/bindings/plugin_generic_edit_field_binding.hpp"
@@ -29,5 +27,5 @@ class PluginColorEditFieldBinding :
   void SetResultValueFromStringData(const wchar_t* data) const override;
 
  private:
-  std::array<wchar_t, kColorEditFieldValueWidth + 1> initial_value_as_string_;
+  wchar_t initial_value_as_string_[kColorEditFieldValueWidth + 1];
 };
