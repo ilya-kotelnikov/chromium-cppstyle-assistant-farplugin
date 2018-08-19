@@ -8,7 +8,8 @@
 #include "dlgbuilderex/bindings/plugin_color_edit_field_binding.hpp"
 
 #include <stdint.h>
-#include <strsafe.h>
+
+#include "globals.hpp"
 
 const wchar_t kColorEditFieldValueMask[] = L"HHHHHH";  // 'RRGGBB' hex.
 
@@ -58,9 +59,8 @@ struct ColorExploder {
 void SetColorValueToHexString(COLORREF value, wchar_t* buffer, size_t size) {
   ColorExploder ce;
   ce.color = value;
-  // TODO: use g_info.FSF->sprintf here.
-  ::StringCchPrintfW(buffer, size,
-                     L"%02X%02X%02X", ce.rgba.r, ce.rgba.g, ce.rgba.b);
+  cc_assistant::g_fsf.snprintf(buffer, size, L"%02X%02X%02X",
+                                             ce.rgba.r, ce.rgba.g, ce.rgba.b);
 }
 
 bool GetColorValueFromHexString(COLORREF* value,
