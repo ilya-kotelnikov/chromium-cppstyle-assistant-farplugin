@@ -9,42 +9,33 @@
 #include <cstring>  // for std::memset
 #include <vector>
 
-#include <Plugin.hpp>
 #include <PluginSettings.hpp>
 
 #include "config_settings.hpp"
 #include "constants.hpp"
 #include "dlgbuilderex/plugin_dialog_builder_ex.hpp"
-#include "guids.hpp"
+#include "globals.hpp"
 #include "localized_strings_ids.hpp"
 #include "version.hpp"
 
-namespace {
+namespace cc_assistant {
 
 constexpr intptr_t kNoEditorId = -2;
 constexpr intptr_t kCurrentEditorId = -1;
 
-PluginStartupInfo g_info;
-FarStandardFunctions g_fsf;
-cc_assistant::ConfigSettings g_opt;
-
 const wchar_t* GetMsg(int msg_id) {
-  return g_info.GetMsg(&cc_assistant::g_plugin_guid, msg_id);
+  return g_psi.GetMsg(&g_plugin_guid, msg_id);
 }
-
-}  // namespace
-
-namespace cc_assistant {
 
 std::wstring GetEditorFileName(intptr_t editor_id) {
   const size_t filename_buffer_size =
-       g_info.EditorControl(editor_id, ECTL_GETFILENAME, 0, nullptr);
+       g_psi.EditorControl(editor_id, ECTL_GETFILENAME, 0, nullptr);
   if (filename_buffer_size == 0)
     return std::wstring();
 
   std::wstring filename(filename_buffer_size, 0);
-  g_info.EditorControl(editor_id, ECTL_GETFILENAME,
-                       filename_buffer_size, filename.data());
+  g_psi.EditorControl(editor_id, ECTL_GETFILENAME,
+                      filename_buffer_size, filename.data());
   filename.resize(filename_buffer_size - 1);  // wstring adds its own null char.
   return filename;
 }
@@ -56,28 +47,28 @@ bool MatchEditorFileNameWithFileMasks(intptr_t editor_id,
 
   const std::wstring filename = GetEditorFileName(editor_id);
 
-  return g_info.FSF->ProcessName(
+  return g_psi.FSF->ProcessName(
              file_masks.c_str(), const_cast<wchar_t*>(filename.c_str()), 0,
              PN_CMPNAMELIST | PN_SKIPPATH) != 0;
 }
 
 bool ValidateFileMasks(const std::wstring& file_masks) {
   return file_masks.empty() ||  // trivial case.
-         g_info.FSF->ProcessName(file_masks.c_str(), nullptr, 0,
-                                 PN_CHECKMASK | PN_SHOWERRORMESSAGE) != 0;
+         g_psi.FSF->ProcessName(file_masks.c_str(), nullptr, 0,
+                                PN_CHECKMASK | PN_SHOWERRORMESSAGE) != 0;
 }
 
 void ActualizePluginSettingsAndRedrawEditor(intptr_t editor_id) {
-  PluginSettings far_settings_storage(g_plugin_guid, g_info.SettingsControl);
+  PluginSettings far_settings_storage(g_plugin_guid, g_psi.SettingsControl);
   g_opt.LoadFromFarStorage(far_settings_storage);
 
   // Redraw the editor to visualize updated plugin settings.
   if (editor_id != kNoEditorId)
-    g_info.EditorControl(editor_id, ECTL_REDRAW, 0, 0);
+    g_psi.EditorControl(editor_id, ECTL_REDRAW, 0, 0);
 }
 
 bool ShowConfigDialog() {
-  PluginDialogBuilderEx builder(g_info, g_plugin_guid, g_config_dialog_guid,
+  PluginDialogBuilderEx builder(g_psi, g_plugin_guid, g_config_dialog_guid,
                                 kMConfigTitle, kConfigHelpTopic);
 
   auto& hlcs = g_opt.highlight_linelimit_column_settings;
@@ -143,7 +134,7 @@ bool ShowConfigDialog() {
   } while (!ValidateFileMasks(hlcs.file_masks));
 
   // Save the updated plugin settings to the Far storage.
-  PluginSettings far_settings_storage(g_plugin_guid, g_info.SettingsControl);
+  PluginSettings far_settings_storage(g_plugin_guid, g_psi.SettingsControl);
   g_opt.SaveToFarStorage(&far_settings_storage);
   return true;
 }
@@ -157,9 +148,9 @@ int ShowMenuAndReturnChosenMenuIndex() {
 
   while(true) {
     const intptr_t menu_result_code =
-        g_info.Menu(&g_plugin_guid, nullptr, -1, -1, 0, FMENU_WRAPMODE,
-                    GetMsg(kMTitle), nullptr, kMenuHelpTopic, nullptr, nullptr,
-                    menu_items.data(), menu_items.size());
+        g_psi.Menu(&g_plugin_guid, nullptr, -1, -1, 0, FMENU_WRAPMODE,
+                   GetMsg(kMTitle), nullptr, kMenuHelpTopic, nullptr, nullptr,
+                   menu_items.data(), menu_items.size());
 
     const int chosen_menu_index = static_cast<int>(menu_result_code);
     if (chosen_menu_index != 0)  // filter "Configure" item index.
@@ -200,7 +191,7 @@ void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
     return;
 
   EditorInfo editor_info = { sizeof(EditorInfo) };
-  g_info.EditorControl(editor_id, ECTL_GETINFO, 0, &editor_info);
+  g_psi.EditorControl(editor_id, ECTL_GETINFO, 0, &editor_info);
 
   // Optimization: do nothing if the column is out of screen at all.
   if (editor_info.LeftPos > hlcs.column_index ||
@@ -217,7 +208,7 @@ void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
     EditorConvertPos ecp = { sizeof(EditorConvertPos) };
     ecp.StringNumber = curr_visible_line_index;
     ecp.SrcPos = hlcs.column_index;
-    g_info.EditorControl(editor_id, ECTL_TABTOREAL, 0, &ecp);
+    g_psi.EditorControl(editor_id, ECTL_TABTOREAL, 0, &ecp);
     const intptr_t adjusted_column_index = ecp.DestPos;
     const bool tabs_detected = (adjusted_column_index != hlcs.column_index);
 
@@ -233,7 +224,7 @@ void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
     ec.Color.BackgroundColor = (tabs_detected) ? hlcs.backcolor_if_tabs
                                                : hlcs.backcolor; 
     ec.Owner = g_plugin_guid;
-    g_info.EditorControl(editor_id, ECTL_ADDCOLOR, 0, &ec);
+    g_psi.EditorControl(editor_id, ECTL_ADDCOLOR, 0, &ec);
   }
 }
 
@@ -257,7 +248,8 @@ extern "C" void WINAPI GetPluginInfoW(PluginInfo* info) {
   info->StructSize = sizeof(PluginInfo);
   info->Flags = PF_EDITOR | PF_DISABLEPANELS;
 
-  static const wchar_t* eternal_title_string = GetMsg(cc_assistant::kMTitle);
+  static const wchar_t* eternal_title_string =
+      cc_assistant::GetMsg(cc_assistant::kMTitle);
   info->PluginMenu.Guids = &cc_assistant::g_menu_guid;
   info->PluginMenu.Strings = &eternal_title_string;
   info->PluginMenu.Count = 1;
@@ -269,19 +261,21 @@ extern "C" void WINAPI GetPluginInfoW(PluginInfo* info) {
 
 extern "C" void WINAPI SetStartupInfoW(const PluginStartupInfo* info) {
   // Use a local copy of |info| as the object will be deleted after the call.
-  g_info = (*info);
-  g_fsf = (*info->FSF);
-  g_info.FSF = &g_fsf;
+  cc_assistant::g_psi = (*info);
+  cc_assistant::g_fsf = (*info->FSF);
+  cc_assistant::g_psi.FSF = &cc_assistant::g_fsf;
 
   // Initialize plugin settings from the Far storage.
-  cc_assistant::ActualizePluginSettingsAndRedrawEditor(kNoEditorId);
+  cc_assistant::ActualizePluginSettingsAndRedrawEditor(
+      cc_assistant::kNoEditorId);
 }
 
 extern "C" intptr_t WINAPI ConfigureW(const ConfigureInfo* info) {
   // As it's an external call, firstly ensure we have the latest plugin
   // settings from the Far storage - they could be changed by another Far
   // instance.
-  cc_assistant::ActualizePluginSettingsAndRedrawEditor(kCurrentEditorId);
+  cc_assistant::ActualizePluginSettingsAndRedrawEditor(
+      cc_assistant::kCurrentEditorId);
 
   return cc_assistant::ShowConfigDialog() ? 1 : 0;
 }
@@ -290,7 +284,8 @@ extern "C" HANDLE WINAPI OpenW(const OpenInfo* open_info) {
   // As it's an external call, firstly ensure we have the latest plugin
   // settings from the Far storage - they could be changed by another Far
   // instance.
-  cc_assistant::ActualizePluginSettingsAndRedrawEditor(kCurrentEditorId);
+  cc_assistant::ActualizePluginSettingsAndRedrawEditor(
+      cc_assistant::kCurrentEditorId);
 
   // Plugin is called to do an action: chose behaviour depending on where it
   // comes from.

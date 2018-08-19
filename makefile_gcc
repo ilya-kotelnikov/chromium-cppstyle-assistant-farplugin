@@ -6,7 +6,7 @@ SRCS = cc_assistant.cpp \
        constants.cpp \
        dlgbuilderex/bindings/plugin_color_edit_field_binding.cpp \
        dlgbuilderex/plugin_dialog_builder_ex.cpp \
-       guids.cpp \
+       globals.cpp \
 
 # System stuff (copied and adopted from Far sources).
 MAKEFILEDIR=$(dir $(realpath $(firstword $(MAKEFILE_LIST))))
