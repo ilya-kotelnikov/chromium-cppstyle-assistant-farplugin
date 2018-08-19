@@ -1,4 +1,4 @@
-# Plugin stuff.
+﻿# Plugin stuff.
 NAME = Chromium-CppStyle-Assistant
 NAME_SHORT = cc_assistant
 SRCS = cc_assistant.cpp \
