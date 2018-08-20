@@ -25,7 +25,8 @@ class PluginUIntEditFieldBinding :
   // DialogAPIBindingEx overrides:
   const wchar_t* GenerateEditFieldMaskOnce(int field_width) override;
   const wchar_t* GetInitialValueAsStringData() const override;
-  void SetResultValueFromStringData(const wchar_t* data) const override;
+  void SetResultValueFromStringData(const wchar_t* data) override;
+  void UpdateInitialValue() override;
 
  private:
   wchar_t initial_value_buffer_[kUIntValueMaxDigitsCount + 1];

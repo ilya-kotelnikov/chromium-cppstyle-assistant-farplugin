@@ -29,9 +29,7 @@ PluginColorEditFieldBinding::PluginColorEditFieldBinding(
     HANDLE* dialog_handle, int item_id, COLORREF* option_var)
     : PluginGenericEditFieldBinding<COLORREF>(
           plugin_startup_info, dialog_handle, item_id, option_var) {
-  SetColorValueToHexString(*option_var_,
-                           initial_value_as_string_,
-                           kColorEditFieldValueWidth + 1);
+  UpdateInitialValue();
 }
 
 const wchar_t* PluginColorEditFieldBinding::GenerateEditFieldMaskOnce(
@@ -45,8 +43,14 @@ PluginColorEditFieldBinding::GetInitialValueAsStringData() const {
 }
 
 void PluginColorEditFieldBinding::SetResultValueFromStringData(
-    const wchar_t* data) const {
+    const wchar_t* data) {
   GetColorValueFromHexString(option_var_, data);
+}
+
+void PluginColorEditFieldBinding::UpdateInitialValue() {
+  SetColorValueToHexString(*option_var_,
+                           initial_value_as_string_,
+                           kColorEditFieldValueWidth + 1);
 }
 
 }  // namespace dlgbuilderex

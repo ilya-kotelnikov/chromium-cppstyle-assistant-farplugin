@@ -58,6 +58,14 @@ class PluginDialogBuilderEx : public PluginDialogBuilder {
   FarDialogItem* AddUIntEditField(unsigned int* option_var,
                                   int edit_field_width) override;
 
+  // Update item's Data property to the current value of its bound option
+  // variable.
+  // Note: only an item added by an Add*() function declared in this class may
+  // be passed as the argument! No check is possible as RTTI is disabled so
+  // another kind of an item passed here as the argument will just crash the
+  // app.
+  void UpdateItemInitialValue(FarDialogItem* item);
+
  protected:
   template<class BindingType>
   FarDialogItem* AddGenericEditFieldForOptionVar(

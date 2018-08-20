@@ -25,8 +25,9 @@ class PluginColorEditFieldBinding :
 
   // DialogAPIBindingEx overrides:
   const wchar_t* GenerateEditFieldMaskOnce(int field_width) override;
-  const wchar_t* GetInitialValueAsStringData() const  override;
-  void SetResultValueFromStringData(const wchar_t* data) const override;
+  const wchar_t* GetInitialValueAsStringData() const override;
+  void SetResultValueFromStringData(const wchar_t* data) override;
+  void UpdateInitialValue() override;
 
  private:
   wchar_t initial_value_as_string_[kColorEditFieldValueWidth + 1];

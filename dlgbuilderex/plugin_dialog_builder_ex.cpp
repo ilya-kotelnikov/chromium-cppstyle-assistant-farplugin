@@ -66,6 +66,15 @@ FarDialogItem* PluginDialogBuilderEx::AddUIntEditField(
              DI_FIXEDIT, edit_field_width, option_var);
 }
 
+void PluginDialogBuilderEx::UpdateItemInitialValue(FarDialogItem* item) {
+  DialogAPIBindingEx* binding =
+      static_cast<DialogAPIBindingEx*>(PluginDialogBuilder::FindBinding(item));
+  if (binding) {
+    binding->UpdateInitialValue();
+    item->Data = binding->GetInitialValueAsStringData();
+  }
+}
+
 FarDialogItem* PluginDialogBuilderEx::DoAddGenericEditFieldForOptionVar(
     FARDIALOGITEMTYPES field_type,
     int field_width,

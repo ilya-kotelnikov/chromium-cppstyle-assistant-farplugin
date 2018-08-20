@@ -26,7 +26,8 @@ class DialogAPIBindingEx : public DialogAPIBinding {
   }
 
   virtual const wchar_t* GetInitialValueAsStringData() const = 0;
-  virtual void SetResultValueFromStringData(const wchar_t* data) const = 0;
+  virtual void SetResultValueFromStringData(const wchar_t* data) = 0;
+  virtual void UpdateInitialValue() = 0;
 };
 
 // A generic implementation of a binding between a variable of some type and its
@@ -57,8 +58,9 @@ class PluginGenericEditFieldBinding : public DialogAPIBindingEx {
 
   // The following methods must be defined in final binding subclass:
   //
-  // const wchar_t* GetInitialValueAsStringData() const  override;
-  // void SetResultValueFromStringData(const wchar_t* data) const override;
+  // const wchar_t* GetInitialValueAsStringData() const override;
+  // void SetResultValueFromStringData(const wchar_t* data) override;
+  // void UpdateInitialValue() override;
 
  protected:
   T* option_var_;

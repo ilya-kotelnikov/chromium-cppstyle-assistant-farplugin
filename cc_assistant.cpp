@@ -72,9 +72,16 @@ bool ShowConfigDialog() {
   auto& hlcs =
       ConfigSettings::GetInstance()->highlight_linelimit_column_settings;
 
+  // Gather input fields references to be able to update their initial values
+  // later in case of dialog re-displaying.
+  std::vector<FarDialogItem*> inputs;
+
   // Add the main setting normally.
-  builder.AddCheckbox(kMHighlightLineLimitColumnEnabledOption, &hlcs.enabled);
-  builder.AddEmptyLine();  // subitems.push_back(builder.AddSeparatorEx());
+  // TODO: support AddCheckbox() in dlgbuilderex.
+  //inputs.push_back(
+      builder.AddCheckbox(kMHighlightLineLimitColumnEnabledOption,
+                          &hlcs.enabled);//);
+  builder.AddEmptyLine();
 
   // Add it's subsettings aligned with the main checkbox label.
   std::vector<FarDialogItem*> subitems;
@@ -83,32 +90,41 @@ bool ShowConfigDialog() {
   constexpr int kFileMasksEditFieldWidth = 40;
   subitems.push_back(
       builder.AddText(kMHighlightLineLimitColumnFileMasksOption));
-  subitems.push_back(builder.AddStringEditField(&hlcs.file_masks,
-                                                kFileMasksEditFieldWidth));
+  inputs.push_back(
+      builder.AddStringEditField(&hlcs.file_masks, kFileMasksEditFieldWidth));
+  subitems.push_back(inputs.back());
 
   // Add a line with the color format hint and then edits for colors: fore, back
   // and back-if-tabs.
   FarDialogItem* color_format_hint_item = builder.AddText(L"rrggbb");
 
   FarDialogItem* forecolor_item = builder.AddColorEditField(&hlcs.forecolor);
-  subitems.push_back(forecolor_item);
-  subitems.push_back(builder.AddTextBefore(
-      subitems.back(), kMHighlightLineLimitColumnForecolorOption));
+  inputs.push_back(forecolor_item);
+  subitems.push_back(inputs.back());
+  subitems.push_back(
+      builder.AddTextBefore(subitems.back(),
+                            kMHighlightLineLimitColumnForecolorOption));
 
-  subitems.push_back(builder.AddColorEditField(&hlcs.backcolor));
-  subitems.push_back(builder.AddTextBefore(
-      subitems.back(), kMHighlightLineLimitColumnBackcolorOption));
+  inputs.push_back(builder.AddColorEditField(&hlcs.backcolor));
+  subitems.push_back(inputs.back());
+  subitems.push_back(
+      builder.AddTextBefore(subitems.back(),
+                            kMHighlightLineLimitColumnBackcolorOption));
 
-  subitems.push_back(builder.AddColorEditField(&hlcs.backcolor_if_tabs));
-  subitems.push_back(builder.AddTextBefore(
-      subitems.back(), kMHighlightLineLimitColumnBackcolorIfTabsOption));
+  inputs.push_back(builder.AddColorEditField(&hlcs.backcolor_if_tabs));
+  subitems.push_back(inputs.back());
+  subitems.push_back(
+      builder.AddTextBefore(subitems.back(),
+                            kMHighlightLineLimitColumnBackcolorIfTabsOption));
 
   builder.AddEmptyLine();
 
   // Add line-limit column index option.
-  subitems.push_back(builder.AddUIntEditField(&hlcs.column_index, 3));
-  subitems.push_back(builder.AddTextBefore(
-     subitems.back(), kMHighlightLineLimitColumnIndexOption));
+  inputs.push_back(builder.AddUIntEditField(&hlcs.column_index, 3));
+  subitems.push_back(inputs.back());
+  subitems.push_back(
+      builder.AddTextBefore(subitems.back(),
+                            kMHighlightLineLimitColumnIndexOption));
 
   // Finally shift all the subitems by 4 positions to right, so they are aligned
   // with the main checkbox label.
@@ -125,13 +141,33 @@ bool ShowConfigDialog() {
 
   builder.AddOKCancel(kMSave, kMCancel);
 
-  do {
-    // TODO: possible bug - this instance's options are changed but not saved.
-    if (!builder.ShowDialog())
-      return false;  // the dialog has been cancelled.
+  while (true) {
+    if (!builder.ShowDialog()) {
+      // The dialog has been cancelled: actualize settings in case they were
+      // changed in another instance while user interacted with our config
+      // dialog.
+      ActualizePluginSettingsAndRedrawEditor(kCurrentEditorId);
+      return false;
+    }
+
+    // We are going to validate 'file masks' and if incorrect then re-display
+    // the config dialog with inputs filled exactly as user had them when
+    // pressed 'Save' button.
+    // It's important to update inputs' initial values before the validation
+    // as the later may show an error message box and cause plugin settings
+    // 'actualization' due focus changing between the Far windows/dialogs.
+    for (FarDialogItem* item : inputs)
+      builder.UpdateItemInitialValue(item);
 
     // Ensure 'file masks' are correct before accepting the settings.
-  } while (!ValidateFileMasks(hlcs.file_masks));
+    if (ValidateFileMasks(hlcs.file_masks))
+      break;
+
+    // Before re-displaying the config dialog do reset this instance settings
+    // object to values from Far storage (which are the current actual settings
+    // for the plugin).
+    ActualizePluginSettingsAndRedrawEditor(kCurrentEditorId);
+  }
 
   // Save the updated plugin settings to the Far storage.
   ConfigSettings::GetInstance()->SaveToFarStorage();

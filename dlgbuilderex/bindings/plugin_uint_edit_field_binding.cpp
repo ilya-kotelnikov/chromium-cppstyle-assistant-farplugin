@@ -16,7 +16,7 @@ PluginUIntEditFieldBinding::PluginUIntEditFieldBinding(
     HANDLE* dialog_handle, int item_id, unsigned int* option_var)
     : PluginGenericEditFieldBinding<unsigned int>(
           plugin_startup_info, dialog_handle, item_id, option_var) {
-  cc_assistant::g_psi().FSF->sprintf(initial_value_buffer_, L"%u", *option_var);
+  UpdateInitialValue();
 }
 
 const wchar_t* PluginUIntEditFieldBinding::GenerateEditFieldMaskOnce(
@@ -37,8 +37,13 @@ const wchar_t* PluginUIntEditFieldBinding::GetInitialValueAsStringData() const {
 }
 
 void PluginUIntEditFieldBinding::SetResultValueFromStringData(
-    const wchar_t* data) const {
+    const wchar_t* data) {
   *option_var_ = cc_assistant::g_psi().FSF->atoi(data);
+}
+
+void PluginUIntEditFieldBinding::UpdateInitialValue() {
+  cc_assistant::g_psi().FSF->sprintf(
+      initial_value_buffer_, L"%u", *option_var_);
 }
 
 }  // namespace dlgbuilderex
