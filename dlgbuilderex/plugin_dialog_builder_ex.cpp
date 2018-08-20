@@ -10,6 +10,9 @@
 #include "dlgbuilderex/bindings/plugin_color_edit_field_binding.hpp"
 #include "dlgbuilderex/bindings/plugin_generic_edit_field_binding.hpp"
 #include "dlgbuilderex/bindings/plugin_string_edit_field_binding.hpp"
+#include "dlgbuilderex/bindings/plugin_uint_edit_field_binding.hpp"
+
+namespace dlgbuilderex {
 
 PluginDialogBuilderEx::PluginDialogBuilderEx(
     const PluginStartupInfo& plugin_startup_info,
@@ -47,13 +50,8 @@ FarDialogItem* PluginDialogBuilderEx::AddSeparatorEx(int text_msg_id) {
 }
 
 FarDialogItem* PluginDialogBuilderEx::AddColorEditField(COLORREF* option_var) {
-  FarDialogItem* item =
-      AddGenericEditFieldForOptionVar<PluginColorEditFieldBinding>(
-          DI_FIXEDIT, kColorEditFieldValueWidth, option_var);
-
-  item->Flags |= DIF_MASKEDIT;
-  item->Mask = kColorEditFieldValueMask;
-  return item;
+  return AddGenericEditFieldForOptionVar<PluginColorEditFieldBinding>(
+             DI_FIXEDIT, kColorEditFieldValueWidth, option_var);
 }
 
 FarDialogItem* PluginDialogBuilderEx::AddStringEditField(
@@ -62,14 +60,29 @@ FarDialogItem* PluginDialogBuilderEx::AddStringEditField(
              DI_EDIT, edit_field_width, option_var);
 }
 
+FarDialogItem* PluginDialogBuilderEx::AddUIntEditField(
+    unsigned int* option_var, int edit_field_width) {
+  return AddGenericEditFieldForOptionVar<PluginUIntEditFieldBinding>(
+             DI_FIXEDIT, edit_field_width, option_var);
+}
+
 FarDialogItem* PluginDialogBuilderEx::DoAddGenericEditFieldForOptionVar(
     FARDIALOGITEMTYPES field_type,
     int field_width,
     DialogAPIBindingEx* new_item_to_option_var_binding) {
   FarDialogItem* item = PluginDialogBuilder::AddDialogItem(field_type, nullptr);
+
   item->Data = new_item_to_option_var_binding->GetInitialValueAsStringData();
+  item->Mask =
+      new_item_to_option_var_binding->GenerateEditFieldMaskOnce(field_width);
+  if (item->Mask)
+    item->Flags |= DIF_MASKEDIT;
+
   PluginDialogBuilder::SetNextY(item);
   item->X2 = item->X1 + field_width - 1;
+
   PluginDialogBuilder::SetLastItemBinding(new_item_to_option_var_binding);
   return item;
 }
+
+}  // namespace dlgbuilderex

@@ -11,6 +11,8 @@
 
 #include "dlgbuilderex/bindings/plugin_generic_edit_field_binding.hpp"
 
+namespace dlgbuilderex {
+
 class PluginStringEditFieldBinding :
     public PluginGenericEditFieldBinding<std::wstring> {
  public:
@@ -23,7 +25,7 @@ class PluginStringEditFieldBinding :
         initial_value_as_string_(*option_var) {
   }
 
-  // DialogAPIBindingGetSetVarMix overrides:
+  // DialogAPIBindingEx overrides:
   const wchar_t* GetInitialValueAsStringData() const override {
     return initial_value_as_string_.c_str();
   }
@@ -35,3 +37,5 @@ class PluginStringEditFieldBinding :
  private:
   std::wstring initial_value_as_string_;
 };
+
+}  // namespace dlgbuilderex

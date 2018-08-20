@@ -11,9 +11,9 @@
 
 #include "globals.hpp"
 
-const wchar_t kColorEditFieldValueMask[] = L"HHHHHH";  // 'RRGGBB' hex.
-
 namespace {
+
+constexpr wchar_t kColorEditFieldValueMask[] = L"HHHHHH";  // 'RRGGBB' hex.
 
 void SetColorValueToHexString(COLORREF value, wchar_t* buffer, size_t size);
 
@@ -21,6 +21,8 @@ bool GetColorValueFromHexString(COLORREF* value,
                                 const wchar_t* hex_rrggbb_string);
 
 }  // namespace
+
+namespace dlgbuilderex {
 
 PluginColorEditFieldBinding::PluginColorEditFieldBinding(
     const PluginStartupInfo& plugin_startup_info,
@@ -32,6 +34,11 @@ PluginColorEditFieldBinding::PluginColorEditFieldBinding(
                            kColorEditFieldValueWidth + 1);
 }
 
+const wchar_t* PluginColorEditFieldBinding::GenerateEditFieldMaskOnce(
+    int field_width) {
+  return kColorEditFieldValueMask;
+}
+
 const wchar_t*
 PluginColorEditFieldBinding::GetInitialValueAsStringData() const {
   return initial_value_as_string_;
@@ -41,6 +48,8 @@ void PluginColorEditFieldBinding::SetResultValueFromStringData(
     const wchar_t* data) const {
   GetColorValueFromHexString(option_var_, data);
 }
+
+}  // namespace dlgbuilderex
 
 ////////////////////////////////////////////////////////////////////////////////
 // Color conversion utilities implemenation
@@ -102,7 +111,8 @@ bool GetColorValueFromHexString(COLORREF* value,
   // The input string must be read fully (i.e. reading ends at the null char)
   // and be of the expected length.
   if ((*reading_input_ptr) != 0 ||
-      reading_input_ptr - hex_rrggbb_string != kColorEditFieldValueWidth) {
+      reading_input_ptr - hex_rrggbb_string !=
+          dlgbuilderex::kColorEditFieldValueWidth) {
     return false;
   }
 

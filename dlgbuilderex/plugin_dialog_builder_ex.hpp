@@ -15,6 +15,8 @@
 
 #include "dlgbuilderex/bindings/plugin_generic_edit_field_binding.hpp"
 
+namespace dlgbuilderex {
+
 //
 // An extended version of the Far API PluginDialogBuilder.
 //
@@ -51,6 +53,11 @@ class PluginDialogBuilderEx : public PluginDialogBuilder {
   FarDialogItem* AddStringEditField(std::wstring* option_var,
                                     int edit_field_width);
 
+  // Add an edit for a unsigned int variable (our version of the original uint
+  // field enables generic algorithms to manipulate with the field).
+  FarDialogItem* AddUIntEditField(unsigned int* option_var,
+                                  int edit_field_width) override;
+
  protected:
   template<class BindingType>
   FarDialogItem* AddGenericEditFieldForOptionVar(
@@ -69,3 +76,5 @@ class PluginDialogBuilderEx : public PluginDialogBuilder {
       int field_width,
       DialogAPIBindingEx* new_item_to_option_var_binding);
 };
+
+}  // namespace dlgbuilderex

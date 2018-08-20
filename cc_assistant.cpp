@@ -65,8 +65,9 @@ void ActualizePluginSettingsAndRedrawEditor(intptr_t editor_id) {
 }
 
 bool ShowConfigDialog() {
-  PluginDialogBuilderEx builder(g_psi(), g_plugin_guid, g_config_dialog_guid,
-                                kMConfigTitle, kConfigHelpTopic);
+  dlgbuilderex::PluginDialogBuilderEx builder(
+      g_psi(), g_plugin_guid, g_config_dialog_guid,
+      kMConfigTitle, kConfigHelpTopic);
 
   auto& hlcs =
       ConfigSettings::GetInstance()->highlight_linelimit_column_settings;

@@ -9,6 +9,8 @@
 
 #include <DlgBuilder.hpp>
 
+namespace dlgbuilderex {
+
 // Define additional interface methods for our edit field bindings to enable
 // generic algorithms.
 //
@@ -17,6 +19,10 @@ class DialogAPIBindingEx : public DialogAPIBinding {
   DialogAPIBindingEx(const PluginStartupInfo& plugin_startup_info,
                      HANDLE* dialog_handle, int item_id)
       : DialogAPIBinding(plugin_startup_info, dialog_handle, item_id) {
+  }
+
+  virtual const wchar_t* GenerateEditFieldMaskOnce(int field_width) {
+    return nullptr;  // no mask by default.
   }
 
   virtual const wchar_t* GetInitialValueAsStringData() const = 0;
@@ -57,3 +63,5 @@ class PluginGenericEditFieldBinding : public DialogAPIBindingEx {
  protected:
   T* option_var_;
 };
+
+}  // namespace dlgbuilderex

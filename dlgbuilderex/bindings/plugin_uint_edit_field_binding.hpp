@@ -7,29 +7,29 @@
 
 #pragma once
 
-#include <windows.h>  // for COLORREF.
-
 #include "dlgbuilderex/bindings/plugin_generic_edit_field_binding.hpp"
 
 namespace dlgbuilderex {
 
-constexpr size_t kColorEditFieldValueWidth = 6;  // "RRGGBB" hex.
+// max(unsigned int) = 4294967295 -> max 10 digits.
+constexpr int kUIntValueMaxDigitsCount = 10;
 
-class PluginColorEditFieldBinding :
-    public PluginGenericEditFieldBinding<COLORREF> {
+class PluginUIntEditFieldBinding :
+    public PluginGenericEditFieldBinding<unsigned int> {
  public:
-  PluginColorEditFieldBinding(const PluginStartupInfo& plugin_startup_info,
-                              HANDLE* dialog_handle,
-                              int item_id,
-                              COLORREF* option_var);
+  PluginUIntEditFieldBinding(const PluginStartupInfo& plugin_startup_info,
+                             HANDLE* dialog_handle,
+                             int item_id,
+                             unsigned int* option_var);
 
   // DialogAPIBindingEx overrides:
   const wchar_t* GenerateEditFieldMaskOnce(int field_width) override;
-  const wchar_t* GetInitialValueAsStringData() const  override;
+  const wchar_t* GetInitialValueAsStringData() const override;
   void SetResultValueFromStringData(const wchar_t* data) const override;
 
  private:
-  wchar_t initial_value_as_string_[kColorEditFieldValueWidth + 1];
+  wchar_t initial_value_buffer_[kUIntValueMaxDigitsCount + 1];
+  wchar_t field_mask_buffer_[kUIntValueMaxDigitsCount + 1];
 };
 
 }  // namespace dlgbuilderex
