@@ -11,8 +11,6 @@
 
 #include <windows.h>  // for COLORREF.
 
-class PluginSettings;
-
 namespace cc_assistant {
 
 struct ConfigSettings {
@@ -29,10 +27,14 @@ struct ConfigSettings {
 
   HighlightLineLimitColumnSettings highlight_linelimit_column_settings; 
 
-  ConfigSettings();
+  static ConfigSettings* GetInstance();
 
-  void LoadFromFarStorage(/*const*/ PluginSettings& storage);
-  void SaveToFarStorage(PluginSettings* storage) const;
+  void ReLoadFromFarStorage();
+  void SaveToFarStorage() const;
+
+ private:
+  ConfigSettings();
+  ~ConfigSettings();
 };
 
 }  // namespace cc_assistant

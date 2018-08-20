@@ -9,8 +9,6 @@
 #include <cstring>  // for std::memset
 #include <vector>
 
-#include <PluginSettings.hpp>
-
 #include "config_settings.hpp"
 #include "constants.hpp"
 #include "dlgbuilderex/plugin_dialog_builder_ex.hpp"
@@ -20,7 +18,6 @@
 
 namespace cc_assistant {
 
-constexpr intptr_t kNoEditorId = -2;
 constexpr intptr_t kCurrentEditorId = -1;
 
 const wchar_t* GetMsg(int msg_id) {
@@ -59,19 +56,18 @@ bool ValidateFileMasks(const std::wstring& file_masks) {
 }
 
 void ActualizePluginSettingsAndRedrawEditor(intptr_t editor_id) {
-  PluginSettings far_settings_storage(g_plugin_guid, g_psi.SettingsControl);
-  g_opt.LoadFromFarStorage(far_settings_storage);
+  ConfigSettings::GetInstance()->ReLoadFromFarStorage();
 
   // Redraw the editor to visualize updated plugin settings.
-  if (editor_id != kNoEditorId)
-    g_psi.EditorControl(editor_id, ECTL_REDRAW, 0, 0);
+  g_psi.EditorControl(editor_id, ECTL_REDRAW, 0, 0);
 }
 
 bool ShowConfigDialog() {
   PluginDialogBuilderEx builder(g_psi, g_plugin_guid, g_config_dialog_guid,
                                 kMConfigTitle, kConfigHelpTopic);
 
-  auto& hlcs = g_opt.highlight_linelimit_column_settings;
+  auto& hlcs =
+      ConfigSettings::GetInstance()->highlight_linelimit_column_settings;
 
   // Add the main setting normally.
   builder.AddCheckbox(kMHighlightLineLimitColumnEnabledOption, &hlcs.enabled);
@@ -127,6 +123,7 @@ bool ShowConfigDialog() {
   builder.AddOKCancel(kMSave, kMCancel);
 
   do {
+    // TODO: possible bug - this instance's options are changed but not saved.
     if (!builder.ShowDialog())
       return false;  // the dialog has been cancelled.
 
@@ -134,8 +131,7 @@ bool ShowConfigDialog() {
   } while (!ValidateFileMasks(hlcs.file_masks));
 
   // Save the updated plugin settings to the Far storage.
-  PluginSettings far_settings_storage(g_plugin_guid, g_psi.SettingsControl);
-  g_opt.SaveToFarStorage(&far_settings_storage);
+  ConfigSettings::GetInstance()->SaveToFarStorage();
   return true;
 }
 
@@ -181,7 +177,8 @@ int GetCommandIdForMacroString(const wchar_t* macro_string_value) {
 }
 
 void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
-  auto& hlcs = g_opt.highlight_linelimit_column_settings;
+  auto& hlcs =
+      ConfigSettings::GetInstance()->highlight_linelimit_column_settings;
 
   if (!hlcs.enabled)
     return;
@@ -265,9 +262,7 @@ extern "C" void WINAPI SetStartupInfoW(const PluginStartupInfo* info) {
   cc_assistant::g_fsf = (*info->FSF);
   cc_assistant::g_psi.FSF = &cc_assistant::g_fsf;
 
-  // Initialize plugin settings from the Far storage.
-  cc_assistant::ActualizePluginSettingsAndRedrawEditor(
-      cc_assistant::kNoEditorId);
+  // TODO: mark psi is ready in the globals.
 }
 
 extern "C" intptr_t WINAPI ConfigureW(const ConfigureInfo* info) {

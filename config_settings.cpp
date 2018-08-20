@@ -10,6 +10,7 @@
 #include <PluginSettings.hpp>
 
 #include "constants.hpp"
+#include "globals.hpp"
 
 namespace cc_assistant {
 
@@ -23,10 +24,15 @@ HighlightLineLimitColumnSettings::HighlightLineLimitColumnSettings()
       file_masks(kHighlightLineLimitColumnFileMasksSettingDefault) {
 }
 
-ConfigSettings::ConfigSettings() : highlight_linelimit_column_settings() {
+// static
+ConfigSettings* ConfigSettings::GetInstance() {
+  static ConfigSettings instance;
+  return &instance;
 }
 
-void ConfigSettings::LoadFromFarStorage(/*const*/ PluginSettings& storage) {
+void ConfigSettings::ReLoadFromFarStorage() {
+  PluginSettings storage(g_plugin_guid, g_psi.SettingsControl);
+
   auto& hlcs = highlight_linelimit_column_settings;
   hlcs.enabled =
       storage.Get(0, kHighlightLineLimitColumnEnabledSettingName,
@@ -48,18 +54,26 @@ void ConfigSettings::LoadFromFarStorage(/*const*/ PluginSettings& storage) {
                      kHighlightLineLimitColumnFileMasksSettingDefault);
 }
 
-void ConfigSettings::SaveToFarStorage(PluginSettings* storage) const {
+void ConfigSettings::SaveToFarStorage() const {
+  PluginSettings storage(g_plugin_guid, g_psi.SettingsControl);
+
   auto& hlcs = highlight_linelimit_column_settings;
-  storage->Set(0, kHighlightLineLimitColumnEnabledSettingName, hlcs.enabled);
-  storage->Set(0, kHighlightLineLimitColumnIndexSettingName, hlcs.column_index);
-  storage->Set(0, kHighlightLineLimitColumnForecolorSettingName,
-                  hlcs.forecolor);
-  storage->Set(0, kHighlightLineLimitColumnBackcolorSettingName,
-                  hlcs.backcolor);
-  storage->Set(0, kHighlightLineLimitColumnBackcolorIfTabsSettingName,
-                  hlcs.backcolor_if_tabs);
-  storage->Set(0, kHighlightLineLimitColumnFileMasksSettingName,
-                  hlcs.file_masks.c_str());
+  storage.Set(0, kHighlightLineLimitColumnEnabledSettingName, hlcs.enabled);
+  storage.Set(0, kHighlightLineLimitColumnIndexSettingName, hlcs.column_index);
+  storage.Set(0, kHighlightLineLimitColumnForecolorSettingName, hlcs.forecolor);
+  storage.Set(0, kHighlightLineLimitColumnBackcolorSettingName, hlcs.backcolor);
+  storage.Set(0, kHighlightLineLimitColumnBackcolorIfTabsSettingName,
+                 hlcs.backcolor_if_tabs);
+  storage.Set(0, kHighlightLineLimitColumnFileMasksSettingName,
+                 hlcs.file_masks.c_str());
+}
+
+ConfigSettings::ConfigSettings() : highlight_linelimit_column_settings() {
+  // TODO: check g_psi is initialized by this moment.
+  ReLoadFromFarStorage();
+}
+
+ConfigSettings::~ConfigSettings() {
 }
 
 }  // namespace cc_assistant

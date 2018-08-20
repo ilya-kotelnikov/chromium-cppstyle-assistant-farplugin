@@ -9,8 +9,6 @@
 
 #include <Plugin.hpp>
 
-#include "config_settings.hpp"
-
 namespace cc_assistant {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -26,10 +24,9 @@ DEFINE_GUID(g_menu_guid, 0x019bba44, 0x7e1e, 0x4207, 0xba, 0x7c, 0xea, 0x86, 0x0
 DEFINE_GUID(g_config_dialog_guid, 0x898b7610, 0x48c5, 0x4f9b, 0x9b, 0x72, 0xbc, 0x1d, 0x06, 0x6e, 0xcc, 0xd9);
 
 ////////////////////////////////////////////////////////////////////////////////
-// Declare plugin global objects.
+// Declare global Far API objects.
 //
 extern PluginStartupInfo g_psi;
 extern FarStandardFunctions g_fsf;
-extern ConfigSettings g_opt;
 
 }  // namespace cc_assistant

@@ -11,10 +11,9 @@
 namespace cc_assistant {
 
 ////////////////////////////////////////////////////////////////////////////////
-// Define plugin global objects.
+// Declare global Far API objects.
 //
 PluginStartupInfo g_psi;
 FarStandardFunctions g_fsf;
-ConfigSettings g_opt;
 
 }  // namespace cc_assistant
