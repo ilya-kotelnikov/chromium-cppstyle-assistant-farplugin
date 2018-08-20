@@ -19,15 +19,19 @@ class PluginStringEditFieldBinding :
                                int item_id,
                                std::wstring* option_var)
       : PluginGenericEditFieldBinding<std::wstring>(
-            plugin_startup_info, dialog_handle, item_id, option_var) {
+            plugin_startup_info, dialog_handle, item_id, option_var),
+        initial_value_as_string_(*option_var) {
   }
 
   // DialogAPIBindingGetSetVarMix overrides:
   const wchar_t* GetInitialValueAsStringData() const override {
-    return option_var_->c_str();
+    return initial_value_as_string_.c_str();
   }
 
   void SetResultValueFromStringData(const wchar_t* data) const override {
     option_var_->assign(data);
   }
+
+ private:
+  std::wstring initial_value_as_string_;
 };
