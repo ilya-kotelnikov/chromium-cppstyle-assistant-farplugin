@@ -9,6 +9,8 @@
 #include <cstring>  // for std::memset
 #include <vector>
 
+#include <Plugin.hpp>
+
 #include "config_settings.hpp"
 #include "constants.hpp"
 #include "dlgbuilderex/plugin_dialog_builder_ex.hpp"
@@ -21,18 +23,18 @@ namespace cc_assistant {
 constexpr intptr_t kCurrentEditorId = -1;
 
 const wchar_t* GetMsg(int msg_id) {
-  return g_psi.GetMsg(&g_plugin_guid, msg_id);
+  return g_psi().GetMsg(&g_plugin_guid, msg_id);
 }
 
 std::wstring GetEditorFileName(intptr_t editor_id) {
   const size_t filename_buffer_size =
-       g_psi.EditorControl(editor_id, ECTL_GETFILENAME, 0, nullptr);
+       g_psi().EditorControl(editor_id, ECTL_GETFILENAME, 0, nullptr);
   if (filename_buffer_size == 0)
     return std::wstring();
 
   std::wstring filename(filename_buffer_size, 0);
-  g_psi.EditorControl(editor_id, ECTL_GETFILENAME,
-                      filename_buffer_size, filename.data());
+  g_psi().EditorControl(editor_id, ECTL_GETFILENAME,
+                        filename_buffer_size, filename.data());
   filename.resize(filename_buffer_size - 1);  // wstring adds its own null char.
   return filename;
 }
@@ -44,26 +46,26 @@ bool MatchEditorFileNameWithFileMasks(intptr_t editor_id,
 
   const std::wstring filename = GetEditorFileName(editor_id);
 
-  return g_psi.FSF->ProcessName(
+  return g_psi().FSF->ProcessName(
              file_masks.c_str(), const_cast<wchar_t*>(filename.c_str()), 0,
              PN_CMPNAMELIST | PN_SKIPPATH) != 0;
 }
 
 bool ValidateFileMasks(const std::wstring& file_masks) {
   return file_masks.empty() ||  // trivial case.
-         g_psi.FSF->ProcessName(file_masks.c_str(), nullptr, 0,
-                                PN_CHECKMASK | PN_SHOWERRORMESSAGE) != 0;
+         g_psi().FSF->ProcessName(file_masks.c_str(), nullptr, 0,
+                                  PN_CHECKMASK | PN_SHOWERRORMESSAGE) != 0;
 }
 
 void ActualizePluginSettingsAndRedrawEditor(intptr_t editor_id) {
   ConfigSettings::GetInstance()->ReLoadFromFarStorage();
 
   // Redraw the editor to visualize updated plugin settings.
-  g_psi.EditorControl(editor_id, ECTL_REDRAW, 0, 0);
+  g_psi().EditorControl(editor_id, ECTL_REDRAW, 0, 0);
 }
 
 bool ShowConfigDialog() {
-  PluginDialogBuilderEx builder(g_psi, g_plugin_guid, g_config_dialog_guid,
+  PluginDialogBuilderEx builder(g_psi(), g_plugin_guid, g_config_dialog_guid,
                                 kMConfigTitle, kConfigHelpTopic);
 
   auto& hlcs =
@@ -144,9 +146,9 @@ int ShowMenuAndReturnChosenMenuIndex() {
 
   while(true) {
     const intptr_t menu_result_code =
-        g_psi.Menu(&g_plugin_guid, nullptr, -1, -1, 0, FMENU_WRAPMODE,
-                   GetMsg(kMTitle), nullptr, kMenuHelpTopic, nullptr, nullptr,
-                   menu_items.data(), menu_items.size());
+        g_psi().Menu(&g_plugin_guid, nullptr, -1, -1, 0, FMENU_WRAPMODE,
+                     GetMsg(kMTitle), nullptr, kMenuHelpTopic, nullptr, nullptr,
+                     menu_items.data(), menu_items.size());
 
     const int chosen_menu_index = static_cast<int>(menu_result_code);
     if (chosen_menu_index != 0)  // filter "Configure" item index.
@@ -188,7 +190,7 @@ void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
     return;
 
   EditorInfo editor_info = { sizeof(EditorInfo) };
-  g_psi.EditorControl(editor_id, ECTL_GETINFO, 0, &editor_info);
+  g_psi().EditorControl(editor_id, ECTL_GETINFO, 0, &editor_info);
 
   // Optimization: do nothing if the column is out of screen at all.
   if (editor_info.LeftPos > hlcs.column_index ||
@@ -205,7 +207,7 @@ void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
     EditorConvertPos ecp = { sizeof(EditorConvertPos) };
     ecp.StringNumber = curr_visible_line_index;
     ecp.SrcPos = hlcs.column_index;
-    g_psi.EditorControl(editor_id, ECTL_TABTOREAL, 0, &ecp);
+    g_psi().EditorControl(editor_id, ECTL_TABTOREAL, 0, &ecp);
     const intptr_t adjusted_column_index = ecp.DestPos;
     const bool tabs_detected = (adjusted_column_index != hlcs.column_index);
 
@@ -221,7 +223,7 @@ void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
     ec.Color.BackgroundColor = (tabs_detected) ? hlcs.backcolor_if_tabs
                                                : hlcs.backcolor; 
     ec.Owner = g_plugin_guid;
-    g_psi.EditorControl(editor_id, ECTL_ADDCOLOR, 0, &ec);
+    g_psi().EditorControl(editor_id, ECTL_ADDCOLOR, 0, &ec);
   }
 }
 
@@ -257,12 +259,9 @@ extern "C" void WINAPI GetPluginInfoW(PluginInfo* info) {
 }
 
 extern "C" void WINAPI SetStartupInfoW(const PluginStartupInfo* info) {
-  // Use a local copy of |info| as the object will be deleted after the call.
-  cc_assistant::g_psi = (*info);
-  cc_assistant::g_fsf = (*info->FSF);
-  cc_assistant::g_psi.FSF = &cc_assistant::g_fsf;
-
-  // TODO: mark psi is ready in the globals.
+  // Initialize this plugin instance's copy of the |info| object provided by
+  // Far. (See g_psi() function notes in globals.hpp for more details.)
+  cc_assistant::g_psi(info);
 }
 
 extern "C" intptr_t WINAPI ConfigureW(const ConfigureInfo* info) {

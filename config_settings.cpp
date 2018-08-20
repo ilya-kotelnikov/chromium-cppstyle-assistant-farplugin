@@ -31,7 +31,7 @@ ConfigSettings* ConfigSettings::GetInstance() {
 }
 
 void ConfigSettings::ReLoadFromFarStorage() {
-  PluginSettings storage(g_plugin_guid, g_psi.SettingsControl);
+  PluginSettings storage(g_plugin_guid, g_psi().SettingsControl);
 
   auto& hlcs = highlight_linelimit_column_settings;
   hlcs.enabled =
@@ -55,7 +55,7 @@ void ConfigSettings::ReLoadFromFarStorage() {
 }
 
 void ConfigSettings::SaveToFarStorage() const {
-  PluginSettings storage(g_plugin_guid, g_psi.SettingsControl);
+  PluginSettings storage(g_plugin_guid, g_psi().SettingsControl);
 
   auto& hlcs = highlight_linelimit_column_settings;
   storage.Set(0, kHighlightLineLimitColumnEnabledSettingName, hlcs.enabled);
@@ -69,7 +69,6 @@ void ConfigSettings::SaveToFarStorage() const {
 }
 
 ConfigSettings::ConfigSettings() : highlight_linelimit_column_settings() {
-  // TODO: check g_psi is initialized by this moment.
   ReLoadFromFarStorage();
 }
 

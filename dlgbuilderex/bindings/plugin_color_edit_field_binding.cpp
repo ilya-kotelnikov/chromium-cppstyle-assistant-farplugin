@@ -59,8 +59,8 @@ struct ColorExploder {
 void SetColorValueToHexString(COLORREF value, wchar_t* buffer, size_t size) {
   ColorExploder ce;
   ce.color = value;
-  cc_assistant::g_fsf.snprintf(buffer, size, L"%02X%02X%02X",
-                                             ce.rgba.r, ce.rgba.g, ce.rgba.b);
+  cc_assistant::g_psi().FSF->snprintf(
+      buffer, size, L"%02X%02X%02X", ce.rgba.r, ce.rgba.g, ce.rgba.b);
 }
 
 bool GetColorValueFromHexString(COLORREF* value,
