@@ -7,26 +7,25 @@
 
 #pragma once
 
-#include "dlgbuilderex/bindings/plugin_generic_edit_field_binding.hpp"
+#include "dlgbuilderex/bindings/generic_edit_field_item_binding.hpp"
 
 namespace dlgbuilderex {
 
 // max(unsigned int) = 4294967295 -> max 10 digits.
 constexpr int kUIntValueMaxDigitsCount = 10;
 
-class PluginUIntEditFieldBinding :
-    public PluginGenericEditFieldBinding<unsigned int> {
+class UIntEditFieldItemBinding :
+    public GenericEditFieldItemBinding<unsigned int> {
  public:
-  PluginUIntEditFieldBinding(const PluginStartupInfo& plugin_startup_info,
-                             HANDLE* dialog_handle,
-                             int item_id,
-                             unsigned int* option_var);
+  UIntEditFieldItemBinding(const PluginStartupInfo& plugin_startup_info,
+                           HANDLE* dialog_handle,
+                           int item_id,
+                           unsigned int* option_var);
 
-  // DialogAPIBindingEx overrides:
   const wchar_t* GenerateEditFieldMaskOnce(int field_width) override;
+  void UpdateInitialValue() override;
   const wchar_t* GetInitialValueAsStringData() const override;
   void SetResultValueFromStringData(const wchar_t* data) override;
-  void UpdateInitialValue() override;
 
  private:
   wchar_t initial_value_buffer_[kUIntValueMaxDigitsCount + 1];

@@ -7,10 +7,11 @@
 
 #include "plugin_dialog_builder_ex.hpp"
 
-#include "dlgbuilderex/bindings/plugin_color_edit_field_binding.hpp"
-#include "dlgbuilderex/bindings/plugin_generic_edit_field_binding.hpp"
-#include "dlgbuilderex/bindings/plugin_string_edit_field_binding.hpp"
-#include "dlgbuilderex/bindings/plugin_uint_edit_field_binding.hpp"
+#include "dlgbuilderex/bindings/checkbox_item_binding.hpp"
+#include "dlgbuilderex/bindings/color_edit_field_item_binding.hpp"
+#include "dlgbuilderex/bindings/generic_edit_field_item_binding.hpp"
+#include "dlgbuilderex/bindings/string_edit_field_item_binding.hpp"
+#include "dlgbuilderex/bindings/uint_edit_field_item_binding.hpp"
 
 namespace dlgbuilderex {
 
@@ -37,60 +38,72 @@ PluginDialogBuilderEx::PluginDialogBuilderEx(
 PluginDialogBuilderEx::~PluginDialogBuilderEx() {
 }
 
-FarDialogItem* PluginDialogBuilderEx::AddSeparatorEx(const wchar_t* text) {
-  FarDialogItem* item = PluginDialogBuilder::AddDialogItem(DI_TEXT, text);
-  item->Flags = DIF_SEPARATOR;
-  item->X1 = -1;
-  item->Y1 = item->Y2 = PluginDialogBuilder::m_NextY++;
+FarDialogItem* PluginDialogBuilderEx::AddCheckboxItem(
+    const wchar_t* label, int* option_var, int checked_state_value_mask,
+    bool three_state) {
+  ItemBinding* new_checkbox_item_binding =
+        new CheckboxItemBinding(PluginDialogBuilder::Info,
+                                &(PluginDialogBuilder::DialogHandle),
+                                PluginDialogBuilder::m_DialogItemsCount,
+                                option_var,
+                                checked_state_value_mask);
+
+  FarDialogItem* item = PluginDialogBuilder::AddDialogItem(DI_CHECKBOX, label);
+
+  new_checkbox_item_binding->UpdateItemInitialValue(item);
+
+  if (three_state && checked_state_value_mask == 0)
+    item->Flags |= DIF_3STATE;
+
+  PluginDialogBuilder::SetNextY(item);
+  item->X2 = item->X1 + PluginDialogBuilder::ItemWidth(*item);
+
+  PluginDialogBuilder::SetLastItemBinding(new_checkbox_item_binding);
   return item;
 }
 
-FarDialogItem* PluginDialogBuilderEx::AddSeparatorEx(int text_msg_id) {
-  return AddSeparatorEx(PluginDialogBuilder::GetLangString(text_msg_id));
-}
-
-FarDialogItem* PluginDialogBuilderEx::AddColorEditField(COLORREF* option_var) {
-  return AddGenericEditFieldForOptionVar<PluginColorEditFieldBinding>(
+FarDialogItem* PluginDialogBuilderEx::AddColorEditFieldItem(
+    COLORREF* option_var) {
+  return AddGenericEditFieldItem<ColorEditFieldItemBinding>(
              DI_FIXEDIT, kColorEditFieldValueWidth, option_var);
 }
 
-FarDialogItem* PluginDialogBuilderEx::AddStringEditField(
+FarDialogItem* PluginDialogBuilderEx::AddStringEditFieldItem(
     std::wstring* option_var, int edit_field_width) {
-  return AddGenericEditFieldForOptionVar<PluginStringEditFieldBinding>(
+  return AddGenericEditFieldItem<StringEditFieldItemBinding>(
              DI_EDIT, edit_field_width, option_var);
 }
 
-FarDialogItem* PluginDialogBuilderEx::AddUIntEditField(
+FarDialogItem* PluginDialogBuilderEx::AddUIntEditFieldItem(
     unsigned int* option_var, int edit_field_width) {
-  return AddGenericEditFieldForOptionVar<PluginUIntEditFieldBinding>(
+  return AddGenericEditFieldItem<UIntEditFieldItemBinding>(
              DI_FIXEDIT, edit_field_width, option_var);
 }
 
 void PluginDialogBuilderEx::UpdateItemInitialValue(FarDialogItem* item) {
-  DialogAPIBindingEx* binding =
-      static_cast<DialogAPIBindingEx*>(PluginDialogBuilder::FindBinding(item));
-  if (binding) {
-    binding->UpdateInitialValue();
-    item->Data = binding->GetInitialValueAsStringData();
-  }
+  ItemBinding* binding =
+      static_cast<ItemBinding*>(PluginDialogBuilder::FindBinding(item));
+  if (binding)
+    binding->UpdateItemInitialValue(item);
 }
 
-FarDialogItem* PluginDialogBuilderEx::DoAddGenericEditFieldForOptionVar(
+FarDialogItem* PluginDialogBuilderEx::DoAddGenericEditFieldItem(
     FARDIALOGITEMTYPES field_type,
     int field_width,
-    DialogAPIBindingEx* new_item_to_option_var_binding) {
+    EditFieldItemBinding* new_edit_field_item_binding) {
   FarDialogItem* item = PluginDialogBuilder::AddDialogItem(field_type, nullptr);
 
-  item->Data = new_item_to_option_var_binding->GetInitialValueAsStringData();
+  new_edit_field_item_binding->UpdateItemInitialValue(item);
+
   item->Mask =
-      new_item_to_option_var_binding->GenerateEditFieldMaskOnce(field_width);
+      new_edit_field_item_binding->GenerateEditFieldMaskOnce(field_width);
   if (item->Mask)
     item->Flags |= DIF_MASKEDIT;
 
   PluginDialogBuilder::SetNextY(item);
   item->X2 = item->X1 + field_width - 1;
 
-  PluginDialogBuilder::SetLastItemBinding(new_item_to_option_var_binding);
+  PluginDialogBuilder::SetLastItemBinding(new_edit_field_item_binding);
   return item;
 }
 

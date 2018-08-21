@@ -5,7 +5,7 @@
 // You may use, distribute and modify this code under the terms of GNU GPLv3.
 //------------------------------------------------------------------------------
 
-#include "dlgbuilderex/bindings/plugin_color_edit_field_binding.hpp"
+#include "dlgbuilderex/bindings/color_edit_field_item_binding.hpp"
 
 #include <stdint.h>
 
@@ -24,33 +24,33 @@ bool GetColorValueFromHexString(COLORREF* value,
 
 namespace dlgbuilderex {
 
-PluginColorEditFieldBinding::PluginColorEditFieldBinding(
+ColorEditFieldItemBinding::ColorEditFieldItemBinding(
     const PluginStartupInfo& plugin_startup_info,
     HANDLE* dialog_handle, int item_id, COLORREF* option_var)
-    : PluginGenericEditFieldBinding<COLORREF>(
+    : GenericEditFieldItemBinding<COLORREF>(
           plugin_startup_info, dialog_handle, item_id, option_var) {
   UpdateInitialValue();
 }
 
-const wchar_t* PluginColorEditFieldBinding::GenerateEditFieldMaskOnce(
+const wchar_t* ColorEditFieldItemBinding::GenerateEditFieldMaskOnce(
     int field_width) {
   return kColorEditFieldValueMask;
 }
 
-const wchar_t*
-PluginColorEditFieldBinding::GetInitialValueAsStringData() const {
-  return initial_value_as_string_;
-}
-
-void PluginColorEditFieldBinding::SetResultValueFromStringData(
-    const wchar_t* data) {
-  GetColorValueFromHexString(option_var_, data);
-}
-
-void PluginColorEditFieldBinding::UpdateInitialValue() {
+void ColorEditFieldItemBinding::UpdateInitialValue() {
   SetColorValueToHexString(*option_var_,
                            initial_value_as_string_,
                            kColorEditFieldValueWidth + 1);
+}
+
+const wchar_t*
+ColorEditFieldItemBinding::GetInitialValueAsStringData() const {
+  return initial_value_as_string_;
+}
+
+void ColorEditFieldItemBinding::SetResultValueFromStringData(
+    const wchar_t* data) {
+  GetColorValueFromHexString(option_var_, data);
 }
 
 }  // namespace dlgbuilderex

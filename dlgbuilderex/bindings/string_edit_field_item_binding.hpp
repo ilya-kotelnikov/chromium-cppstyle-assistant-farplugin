@@ -9,33 +9,32 @@
 
 #include <string>
 
-#include "dlgbuilderex/bindings/plugin_generic_edit_field_binding.hpp"
+#include "dlgbuilderex/bindings/generic_edit_field_item_binding.hpp"
 
 namespace dlgbuilderex {
 
-class PluginStringEditFieldBinding :
-    public PluginGenericEditFieldBinding<std::wstring> {
+class StringEditFieldItemBinding :
+    public GenericEditFieldItemBinding<std::wstring> {
  public:
-  PluginStringEditFieldBinding(const PluginStartupInfo& plugin_startup_info,
-                               HANDLE* dialog_handle,
-                               int item_id,
-                               std::wstring* option_var)
-      : PluginGenericEditFieldBinding<std::wstring>(
+  StringEditFieldItemBinding(const PluginStartupInfo& plugin_startup_info,
+                             HANDLE* dialog_handle,
+                             int item_id,
+                             std::wstring* option_var)
+      : GenericEditFieldItemBinding<std::wstring>(
             plugin_startup_info, dialog_handle, item_id, option_var) {
     UpdateInitialValue();
   }
 
-  // DialogAPIBindingEx overrides:
+  void UpdateInitialValue() override {
+    initial_value_as_string_.assign(*option_var_);
+  }
+
   const wchar_t* GetInitialValueAsStringData() const override {
     return initial_value_as_string_.c_str();
   }
 
   void SetResultValueFromStringData(const wchar_t* data) override {
     option_var_->assign(data);
-  }
-
-  void UpdateInitialValue() override {
-    initial_value_as_string_.assign(*option_var_);
   }
 
  private:

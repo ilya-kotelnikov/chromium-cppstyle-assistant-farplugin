@@ -4,8 +4,8 @@ NAME_SHORT = cc_assistant
 SRCS = cc_assistant.cpp \
        config_settings.cpp \
        constants.cpp \
-       dlgbuilderex/bindings/plugin_color_edit_field_binding.cpp \
-       dlgbuilderex/bindings/plugin_uint_edit_field_binding.cpp \
+       dlgbuilderex/bindings/color_edit_field_item_binding.cpp \
+       dlgbuilderex/bindings/uint_edit_field_item_binding.cpp \
        dlgbuilderex/plugin_dialog_builder_ex.cpp \
        globals.cpp \
 

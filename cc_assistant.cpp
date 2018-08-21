@@ -77,10 +77,9 @@ bool ShowConfigDialog() {
   std::vector<FarDialogItem*> inputs;
 
   // Add the main setting normally.
-  // TODO: support AddCheckbox() in dlgbuilderex.
-  //inputs.push_back(
-      builder.AddCheckbox(kMHighlightLineLimitColumnEnabledOption,
-                          &hlcs.enabled);//);
+  inputs.push_back(
+      builder.AddCheckboxItem(GetMsg(kMHighlightLineLimitColumnEnabledOption),
+                              &hlcs.enabled));
   builder.AddEmptyLine();
 
   // Add it's subsettings aligned with the main checkbox label.
@@ -91,27 +90,29 @@ bool ShowConfigDialog() {
   subitems.push_back(
       builder.AddText(kMHighlightLineLimitColumnFileMasksOption));
   inputs.push_back(
-      builder.AddStringEditField(&hlcs.file_masks, kFileMasksEditFieldWidth));
+      builder.AddStringEditFieldItem(&hlcs.file_masks,
+                                     kFileMasksEditFieldWidth));
   subitems.push_back(inputs.back());
 
   // Add a line with the color format hint and then edits for colors: fore, back
   // and back-if-tabs.
   FarDialogItem* color_format_hint_item = builder.AddText(L"rrggbb");
 
-  FarDialogItem* forecolor_item = builder.AddColorEditField(&hlcs.forecolor);
+  FarDialogItem* forecolor_item =
+      builder.AddColorEditFieldItem(&hlcs.forecolor);
   inputs.push_back(forecolor_item);
   subitems.push_back(inputs.back());
   subitems.push_back(
       builder.AddTextBefore(subitems.back(),
                             kMHighlightLineLimitColumnForecolorOption));
 
-  inputs.push_back(builder.AddColorEditField(&hlcs.backcolor));
+  inputs.push_back(builder.AddColorEditFieldItem(&hlcs.backcolor));
   subitems.push_back(inputs.back());
   subitems.push_back(
       builder.AddTextBefore(subitems.back(),
                             kMHighlightLineLimitColumnBackcolorOption));
 
-  inputs.push_back(builder.AddColorEditField(&hlcs.backcolor_if_tabs));
+  inputs.push_back(builder.AddColorEditFieldItem(&hlcs.backcolor_if_tabs));
   subitems.push_back(inputs.back());
   subitems.push_back(
       builder.AddTextBefore(subitems.back(),
@@ -120,7 +121,7 @@ bool ShowConfigDialog() {
   builder.AddEmptyLine();
 
   // Add line-limit column index option.
-  inputs.push_back(builder.AddUIntEditField(&hlcs.column_index, 3));
+  inputs.push_back(builder.AddUIntEditFieldItem(&hlcs.column_index, 3));
   subitems.push_back(inputs.back());
   subitems.push_back(
       builder.AddTextBefore(subitems.back(),
@@ -284,14 +285,14 @@ extern "C" void WINAPI GetPluginInfoW(PluginInfo* info) {
   info->StructSize = sizeof(PluginInfo);
   info->Flags = PF_EDITOR | PF_DISABLEPANELS;
 
-  static const wchar_t* eternal_title_string =
+  static const wchar_t* static_title_string =
       cc_assistant::GetMsg(cc_assistant::kMTitle);
   info->PluginMenu.Guids = &cc_assistant::g_menu_guid;
-  info->PluginMenu.Strings = &eternal_title_string;
+  info->PluginMenu.Strings = &static_title_string;
   info->PluginMenu.Count = 1;
 
   info->PluginConfig.Guids = &cc_assistant::g_config_dialog_guid;
-  info->PluginConfig.Strings = &eternal_title_string;
+  info->PluginConfig.Strings = &static_title_string;
   info->PluginConfig.Count = 1;
 }
 

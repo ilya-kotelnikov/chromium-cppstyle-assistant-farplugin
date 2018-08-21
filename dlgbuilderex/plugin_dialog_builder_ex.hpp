@@ -13,7 +13,7 @@
 
 #include <DlgBuilder.hpp>
 
-#include "dlgbuilderex/bindings/plugin_generic_edit_field_binding.hpp"
+#include "dlgbuilderex/bindings/generic_edit_field_item_binding.hpp"
 
 namespace dlgbuilderex {
 
@@ -41,26 +41,28 @@ class PluginDialogBuilderEx : public PluginDialogBuilder {
                         const wchar_t* help_topic);
   ~PluginDialogBuilderEx() override;
 
-  // Add a separator and return it for fine-tuning (standard AddSeparator()
-  // returns void).
-  FarDialogItem* AddSeparatorEx(const wchar_t* text = L"");
-  FarDialogItem* AddSeparatorEx(int text_msg_id);
+  // Add a standard checkbox for an int variable (our version of the original
+  // checkbox enables generic algorithms to manipulate the item).
+  FarDialogItem* AddCheckboxItem(const wchar_t* label,
+                                 int* option_var,
+                                 int checked_state_value_mask = 0,
+                                 bool three_state = false);
 
   // Add an edit for a color variable represented as "RRGGBB" in hex.
-  FarDialogItem* AddColorEditField(COLORREF* option_var);
+  FarDialogItem* AddColorEditFieldItem(COLORREF* option_var);
 
   // Add an edit for a string variable.
-  FarDialogItem* AddStringEditField(std::wstring* option_var,
-                                    int edit_field_width);
+  FarDialogItem* AddStringEditFieldItem(std::wstring* option_var,
+                                        int edit_field_width);
 
   // Add an edit for a unsigned int variable (our version of the original uint
-  // field enables generic algorithms to manipulate with the field).
-  FarDialogItem* AddUIntEditField(unsigned int* option_var,
-                                  int edit_field_width) override;
+  // field enables generic algorithms to manipulate the item).
+  FarDialogItem* AddUIntEditFieldItem(unsigned int* option_var,
+                                      int edit_field_width);
 
-  // Update item's Data property to the current value of its bound option
-  // variable.
-  // Note: only an item added by an Add*() function declared in this class may
+  // Update item's initial content/state to correspond to current value of its
+  // bound option variable.
+  // Note: only an item added by Add*Item() function declared in this class may
   // be passed as the argument! No check is possible as RTTI is disabled so
   // another kind of an item passed here as the argument will just crash the
   // app.
@@ -68,21 +70,21 @@ class PluginDialogBuilderEx : public PluginDialogBuilder {
 
  protected:
   template<class BindingType>
-  FarDialogItem* AddGenericEditFieldForOptionVar(
+  FarDialogItem* AddGenericEditFieldItem(
       FARDIALOGITEMTYPES field_type,
       int field_width,
       typename BindingType::OptionVarType* option_var) {
-    return DoAddGenericEditFieldForOptionVar(field_type, field_width,
+    return DoAddGenericEditFieldItem(
+        field_type, field_width,
         new BindingType(PluginDialogBuilder::Info,
                         &(PluginDialogBuilder::DialogHandle),
                         PluginDialogBuilder::m_DialogItemsCount, option_var));
   }
 
  private:
-  FarDialogItem* DoAddGenericEditFieldForOptionVar(
-      FARDIALOGITEMTYPES field_type,
-      int field_width,
-      DialogAPIBindingEx* new_item_to_option_var_binding);
+  FarDialogItem* DoAddGenericEditFieldItem(
+      FARDIALOGITEMTYPES field_type, int field_width,
+      EditFieldItemBinding* new_edit_field_item_binding);
 };
 
 }  // namespace dlgbuilderex
