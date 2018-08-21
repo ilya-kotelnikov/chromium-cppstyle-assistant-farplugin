@@ -1,4 +1,4 @@
-﻿////////////////////////////////////////////////////////////////////////////////
+﻿///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2018, Ilya Kotelnikov (ilya.kotelnikov@gmail.com)
 // All rights reserved.
 //
@@ -69,12 +69,22 @@ bool ShowConfigDialog() {
       g_psi(), g_plugin_guid, g_config_dialog_guid,
       kMConfigTitle, kConfigHelpTopic);
 
-  auto& hlcs =
-      ConfigSettings::GetInstance()->highlight_linelimit_column_settings;
+  ConfigSettings* config_settings = ConfigSettings::GetInstance();
 
   // Gather input fields references to be able to update their initial values
   // later in case of dialog re-displaying.
   std::vector<FarDialogItem*> inputs;
+
+  // Add common 'file masks' text edit field at the top.
+  constexpr int kFileMasksEditFieldWidth = 40;
+  builder.AddText(kMHighlightLineLimitColumnFileMasksOption);
+  inputs.push_back(
+      builder.AddStringEditFieldItem(&config_settings->file_masks,
+                                     kFileMasksEditFieldWidth));
+  builder.AddSeparator();
+
+  // Add "Highlight line-limit column" feature settings.
+  auto& hlcs = config_settings->highlight_linelimit_column_settings;
 
   // Add the main setting normally.
   inputs.push_back(
@@ -85,19 +95,20 @@ bool ShowConfigDialog() {
   // Add it's subsettings aligned with the main checkbox label.
   std::vector<FarDialogItem*> subitems;
 
-  // Add 'file masks' text field.
-  constexpr int kFileMasksEditFieldWidth = 40;
-  subitems.push_back(
-      builder.AddText(kMHighlightLineLimitColumnFileMasksOption));
-  inputs.push_back(
-      builder.AddStringEditFieldItem(&hlcs.file_masks,
-                                     kFileMasksEditFieldWidth));
+  // Add line-limit column index option.
+  inputs.push_back(builder.AddUIntEditFieldItem(&hlcs.column_index, 3));
   subitems.push_back(inputs.back());
+  subitems.push_back(
+      builder.AddTextBefore(subitems.back(),
+                            kMHighlightLineLimitColumnIndexOption));
 
-  // Add a line with the color format hint and then edits for colors: fore, back
-  // and back-if-tabs.
-  FarDialogItem* color_format_hint_item = builder.AddText(L"rrggbb");
+  // On the same line add the color format hint aligned with color inputs going
+  // on next lines.
+  FarDialogItem* color_format_hint_item =
+      builder.AddTextAfter(inputs.back(), L"rrggbb");
 
+  // Add edits for colors: fore, back and back-if-tabs - each one on its own
+  // line.
   FarDialogItem* forecolor_item =
       builder.AddColorEditFieldItem(&hlcs.forecolor);
   inputs.push_back(forecolor_item);
@@ -117,15 +128,6 @@ bool ShowConfigDialog() {
   subitems.push_back(
       builder.AddTextBefore(subitems.back(),
                             kMHighlightLineLimitColumnBackcolorIfTabsOption));
-
-  builder.AddEmptyLine();
-
-  // Add line-limit column index option.
-  inputs.push_back(builder.AddUIntEditFieldItem(&hlcs.column_index, 3));
-  subitems.push_back(inputs.back());
-  subitems.push_back(
-      builder.AddTextBefore(subitems.back(),
-                            kMHighlightLineLimitColumnIndexOption));
 
   // Finally shift all the subitems by 4 positions to right, so they are aligned
   // with the main checkbox label.
@@ -161,7 +163,7 @@ bool ShowConfigDialog() {
       builder.UpdateItemInitialValue(item);
 
     // Ensure 'file masks' are correct before accepting the settings.
-    if (ValidateFileMasks(hlcs.file_masks))
+    if (ValidateFileMasks(config_settings->file_masks))
       break;
 
     // Before re-displaying the config dialog do reset this instance settings
@@ -171,7 +173,7 @@ bool ShowConfigDialog() {
   }
 
   // Save the updated plugin settings to the Far storage.
-  ConfigSettings::GetInstance()->SaveToFarStorage();
+  config_settings->SaveToFarStorage();
   return true;
 }
 
@@ -217,15 +219,18 @@ int GetCommandIdForMacroString(const wchar_t* macro_string_value) {
 }
 
 void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
-  auto& hlcs =
-      ConfigSettings::GetInstance()->highlight_linelimit_column_settings;
+  ConfigSettings* config_settings = ConfigSettings::GetInstance();
+
+  auto& hlcs = config_settings->highlight_linelimit_column_settings;
 
   if (!hlcs.enabled)
     return;
 
   // TODO: add optimization here.
-  if (!MatchEditorFileNameWithFileMasks(editor_id, hlcs.file_masks))
+  if (!MatchEditorFileNameWithFileMasks(editor_id,
+                                        config_settings->file_masks)) {
     return;
+  }
 
   EditorInfo editor_info = { sizeof(EditorInfo) };
   g_psi().EditorControl(editor_id, ECTL_GETINFO, 0, &editor_info);

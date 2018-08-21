@@ -19,12 +19,11 @@ struct ConfigSettings {
     int enabled;
     unsigned int column_index;
     COLORREF forecolor, backcolor, backcolor_if_tabs;
-    // TODO: use SimpleString to decrease binary size?
-    std::wstring file_masks;
 
     HighlightLineLimitColumnSettings();
   };
 
+  std::wstring file_masks;
   HighlightLineLimitColumnSettings highlight_linelimit_column_settings; 
 
   static ConfigSettings* GetInstance();

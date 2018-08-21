@@ -20,6 +20,7 @@ const wchar_t kConfigHelpTopic[] = L"Configure";
 ////////////////////////////////////////////////////////////////////////////////
 // Names and default values for plugin settings.
 //
+const wchar_t kFileMasksSettingName[] = L"FileMasks";
 const wchar_t kHighlightLineLimitColumnEnabledSettingName[] =
     L"HighlightLineLimitColumnEnabled";
 const wchar_t kHighlightLineLimitColumnIndexSettingName[] =
@@ -30,10 +31,7 @@ const wchar_t kHighlightLineLimitColumnBackcolorSettingName[] =
     L"HighlightLineLimitColumnBackcolor";
 const wchar_t kHighlightLineLimitColumnBackcolorIfTabsSettingName[] =
     L"HighlightLineLimitColumnBackcolorIfTabs";
-const wchar_t kHighlightLineLimitColumnFileMasksSettingName[] =
-    L"HighlightLineLimitColumnFileMasks";
 
-const wchar_t kHighlightLineLimitColumnFileMasksSettingDefault[] =
-    L"*.c;*.cc;*.cpp;*.h;*.hh;*.hpp;";
+const wchar_t kFileMasksSettingDefault[] = L"*.c;*.cc;*.cpp;*.h;*.hh;*.hpp;";
 
 }  // namespace cc_assistant

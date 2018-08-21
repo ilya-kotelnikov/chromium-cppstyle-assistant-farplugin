@@ -20,8 +20,8 @@ HighlightLineLimitColumnSettings::HighlightLineLimitColumnSettings()
       column_index(kHighlightLineLimitColumnIndexSettingDefault),
       forecolor(kHighlightLineLimitColumnForecolorSettingDefault),
       backcolor(kHighlightLineLimitColumnBackcolorSettingDefault),
-      backcolor_if_tabs(kHighlightLineLimitColumnBackcolorIfTabsSettingDefault),
-      file_masks(kHighlightLineLimitColumnFileMasksSettingDefault) {
+      backcolor_if_tabs(
+          kHighlightLineLimitColumnBackcolorIfTabsSettingDefault) {
 }
 
 // static
@@ -32,6 +32,8 @@ ConfigSettings* ConfigSettings::GetInstance() {
 
 void ConfigSettings::ReLoadFromFarStorage() {
   PluginSettings storage(g_plugin_guid, g_psi().SettingsControl);
+
+  file_masks = storage.Get(0, kFileMasksSettingName, kFileMasksSettingDefault);
 
   auto& hlcs = highlight_linelimit_column_settings;
   hlcs.enabled =
@@ -49,13 +51,12 @@ void ConfigSettings::ReLoadFromFarStorage() {
   hlcs.backcolor_if_tabs =
       storage.Get(0, kHighlightLineLimitColumnBackcolorIfTabsSettingName,
                      kHighlightLineLimitColumnBackcolorIfTabsSettingDefault);
-  hlcs.file_masks =
-      storage.Get(0, kHighlightLineLimitColumnFileMasksSettingName,
-                     kHighlightLineLimitColumnFileMasksSettingDefault);
 }
 
 void ConfigSettings::SaveToFarStorage() const {
   PluginSettings storage(g_plugin_guid, g_psi().SettingsControl);
+
+  storage.Set(0, kFileMasksSettingName, file_masks.c_str());
 
   auto& hlcs = highlight_linelimit_column_settings;
   storage.Set(0, kHighlightLineLimitColumnEnabledSettingName, hlcs.enabled);
@@ -64,11 +65,10 @@ void ConfigSettings::SaveToFarStorage() const {
   storage.Set(0, kHighlightLineLimitColumnBackcolorSettingName, hlcs.backcolor);
   storage.Set(0, kHighlightLineLimitColumnBackcolorIfTabsSettingName,
                  hlcs.backcolor_if_tabs);
-  storage.Set(0, kHighlightLineLimitColumnFileMasksSettingName,
-                 hlcs.file_masks.c_str());
 }
 
-ConfigSettings::ConfigSettings() : highlight_linelimit_column_settings() {
+ConfigSettings::ConfigSettings() : file_masks(kFileMasksSettingDefault),
+                                   highlight_linelimit_column_settings() {
   ReLoadFromFarStorage();
 }
 
