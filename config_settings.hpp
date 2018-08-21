@@ -7,13 +7,17 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 
 #include <windows.h>  // for COLORREF.
 
 namespace cc_assistant {
 
-struct ConfigSettings {
+class EditorFileNameMatchCache;
+
+class ConfigSettings {
+ public:
   // "Highlight line-limit column" feature settings.
   struct HighlightLineLimitColumnSettings {
     int enabled;
@@ -31,9 +35,25 @@ struct ConfigSettings {
   void ReLoadFromFarStorage();
   void SaveToFarStorage() const;
 
+  // The function returns null if all the features are off in the settings or
+  // file masks are empty (the object is useless in these cases, so it is
+  // deleted not to waist memory).
+  EditorFileNameMatchCache* editor_filename_match_cache();
+
+  // Plugin match function should return this function result (default match
+  // value) in case of null editor_filename_match_cache(). It may be true or
+  // false depending on the settings and internal logic.
+  bool editor_filename_match_default() const;
+
  private:
   ConfigSettings();
   ~ConfigSettings();
+
+  void UpdateEditorFileNameMatchCache() const;
+  bool IsEditorFileNameMatchCacheUsable() const;
+
+  mutable
+      std::unique_ptr<EditorFileNameMatchCache> editor_filename_match_cache_;
 };
 
 }  // namespace cc_assistant

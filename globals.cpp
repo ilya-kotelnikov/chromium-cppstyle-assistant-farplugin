@@ -8,9 +8,9 @@
 #include <initguid.h>  // due this header the guids are defined in this module.
 #include "globals.hpp"
 
-#include <cassert>
-
 #include <Plugin.hpp>
+
+#include "assert.hpp"
 
 namespace cc_assistant {
 

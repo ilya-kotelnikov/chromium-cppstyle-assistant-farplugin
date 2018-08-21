@@ -14,6 +14,7 @@
 #include "config_settings.hpp"
 #include "constants.hpp"
 #include "dlgbuilderex/plugin_dialog_builder_ex.hpp"
+#include "editor_filename_match_cache.hpp"
 #include "globals.hpp"
 #include "localized_strings_ids.hpp"
 #include "version.hpp"
@@ -26,29 +27,28 @@ const wchar_t* GetMsg(int msg_id) {
   return g_psi().GetMsg(&g_plugin_guid, msg_id);
 }
 
-std::wstring GetEditorFileName(intptr_t editor_id) {
-  const size_t filename_buffer_size =
-       g_psi().EditorControl(editor_id, ECTL_GETFILENAME, 0, nullptr);
-  if (filename_buffer_size == 0)
-    return std::wstring();
+bool MatchEditorFileNameWithFileMasks(intptr_t editor_id) {
+  auto* config_settings = ConfigSettings::GetInstance();
 
-  std::wstring filename(filename_buffer_size, 0);
-  g_psi().EditorControl(editor_id, ECTL_GETFILENAME,
-                        filename_buffer_size, filename.data());
-  filename.resize(filename_buffer_size - 1);  // wstring adds its own null char.
-  return filename;
-}
+  auto* editor_filename_match_cache =
+      config_settings->editor_filename_match_cache();
+  if (!editor_filename_match_cache)
+    return config_settings->editor_filename_match_default();
 
-bool MatchEditorFileNameWithFileMasks(intptr_t editor_id,
-                                      const std::wstring& file_masks) {
-  if (file_masks.empty())  // trivial case.
-    return true;
+  bool match = false;
+  const std::wstring* filename_ref = nullptr;
+  if (editor_filename_match_cache->
+          GetEditorMatchOrFileNameRef(editor_id, &match, &filename_ref)) {
+    return match;
+  }
 
-  const std::wstring filename = GetEditorFileName(editor_id);
+  match = g_psi().FSF->ProcessName(
+              config_settings->file_masks.c_str(),
+              const_cast<wchar_t*>(filename_ref->c_str()), 0,
+              PN_CMPNAMELIST | PN_SKIPPATH) != 0;
 
-  return g_psi().FSF->ProcessName(
-             file_masks.c_str(), const_cast<wchar_t*>(filename.c_str()), 0,
-             PN_CMPNAMELIST | PN_SKIPPATH) != 0;
+  editor_filename_match_cache->SetEditorMatch(editor_id, match);
+  return match;
 }
 
 bool ValidateFileMasks(const std::wstring& file_masks) {
@@ -69,7 +69,7 @@ bool ShowConfigDialog() {
       g_psi(), g_plugin_guid, g_config_dialog_guid,
       kMConfigTitle, kConfigHelpTopic);
 
-  ConfigSettings* config_settings = ConfigSettings::GetInstance();
+  auto* config_settings = ConfigSettings::GetInstance();
 
   // Gather input fields references to be able to update their initial values
   // later in case of dialog re-displaying.
@@ -219,18 +219,14 @@ int GetCommandIdForMacroString(const wchar_t* macro_string_value) {
 }
 
 void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
-  ConfigSettings* config_settings = ConfigSettings::GetInstance();
-
-  auto& hlcs = config_settings->highlight_linelimit_column_settings;
+  auto& hlcs =
+      ConfigSettings::GetInstance()->highlight_linelimit_column_settings;
 
   if (!hlcs.enabled)
     return;
 
-  // TODO: add optimization here.
-  if (!MatchEditorFileNameWithFileMasks(editor_id,
-                                        config_settings->file_masks)) {
+  if (!MatchEditorFileNameWithFileMasks(editor_id))
     return;
-  }
 
   EditorInfo editor_info = { sizeof(EditorInfo) };
   g_psi().EditorControl(editor_id, ECTL_GETINFO, 0, &editor_info);
@@ -397,6 +393,41 @@ extern "C" intptr_t WINAPI ProcessEditorEventW(
       // instance (in another Far process) could change them while this
       // instance was in "background".
       cc_assistant::ActualizePluginSettingsAndRedrawEditor(info->EditorID);
+      break;
+
+    case EE_READ:
+    case EE_SAVE:
+    case EE_CLOSE: {
+        // Read/Save are the only events which define filename for an editor.
+        // Close event removes the editor -> clean cache.
+        auto* editor_filename_match_cache =
+            cc_assistant::ConfigSettings::GetInstance()->
+                editor_filename_match_cache();
+        if (editor_filename_match_cache) {
+          switch (info->Event) {
+            case EE_READ:
+              // 'Read' doesn't provide any info so the filename will be
+              // requested from the editor by the cache object.
+              editor_filename_match_cache->SetEditorFileName(info->EditorID);
+              break;
+
+            case EE_SAVE:
+              // Pass the new filename of the editor in case of 'Save As'.
+              // (The editor reports the old filename as the current one at this
+              // moment and some near future.)
+              editor_filename_match_cache->SetEditorFileName(info->EditorID,
+                  static_cast<EditorSaveFile*>(info->Param)->FileName);
+              break;
+
+            case EE_CLOSE:
+              editor_filename_match_cache->DropEditor(info->EditorID);
+              break;
+
+            default:
+              break;
+          }
+        }
+      }
       break;
 
     default:

@@ -10,6 +10,7 @@
 #include <PluginSettings.hpp>
 
 #include "constants.hpp"
+#include "editor_filename_match_cache.hpp"
 #include "globals.hpp"
 
 namespace cc_assistant {
@@ -51,6 +52,8 @@ void ConfigSettings::ReLoadFromFarStorage() {
   hlcs.backcolor_if_tabs =
       storage.Get(0, kHighlightLineLimitColumnBackcolorIfTabsSettingName,
                      kHighlightLineLimitColumnBackcolorIfTabsSettingDefault);
+
+  UpdateEditorFileNameMatchCache();
 }
 
 void ConfigSettings::SaveToFarStorage() const {
@@ -65,6 +68,22 @@ void ConfigSettings::SaveToFarStorage() const {
   storage.Set(0, kHighlightLineLimitColumnBackcolorSettingName, hlcs.backcolor);
   storage.Set(0, kHighlightLineLimitColumnBackcolorIfTabsSettingName,
                  hlcs.backcolor_if_tabs);
+
+  UpdateEditorFileNameMatchCache();
+}
+
+EditorFileNameMatchCache* ConfigSettings::editor_filename_match_cache() {
+  if (!editor_filename_match_cache_ && IsEditorFileNameMatchCacheUsable()) {
+    editor_filename_match_cache_.reset(new EditorFileNameMatchCache());
+    editor_filename_match_cache_->SetFileMasks(file_masks);
+  }
+
+  return editor_filename_match_cache_.get();
+}
+
+bool ConfigSettings::editor_filename_match_default() const {
+  // Empty file masks match everything.
+  return file_masks.empty();
 }
 
 ConfigSettings::ConfigSettings() : file_masks(kFileMasksSettingDefault),
@@ -73,6 +92,19 @@ ConfigSettings::ConfigSettings() : file_masks(kFileMasksSettingDefault),
 }
 
 ConfigSettings::~ConfigSettings() {
+}
+
+void ConfigSettings::UpdateEditorFileNameMatchCache() const {
+  if (!IsEditorFileNameMatchCacheUsable())
+    editor_filename_match_cache_.reset();
+  else if (editor_filename_match_cache_)
+    editor_filename_match_cache_->SetFileMasks(file_masks);
+}
+
+bool ConfigSettings::IsEditorFileNameMatchCacheUsable() const {
+  // The cache makes sense only if 'file masks' setting is not empty and
+  // at least one feature is on.
+  return !file_masks.empty() && highlight_linelimit_column_settings.enabled;
 }
 
 }  // namespace cc_assistant

@@ -7,6 +7,7 @@ SRCS = cc_assistant.cpp \
        dlgbuilderex/bindings/color_edit_field_item_binding.cpp \
        dlgbuilderex/bindings/uint_edit_field_item_binding.cpp \
        dlgbuilderex/plugin_dialog_builder_ex.cpp \
+       editor_filename_match_cache.cpp \
        globals.cpp \
 
 # System stuff (copied and adopted from Far sources).
