@@ -11,7 +11,6 @@
 
 #include <Plugin.hpp>
 
-#include "assert.hpp"
 #include "globals.hpp"
 
 namespace cc_assistant {

@@ -77,7 +77,7 @@ bool ShowConfigDialog() {
 
   // Add common 'file masks' text edit field at the top.
   constexpr int kFileMasksEditFieldWidth = 40;
-  builder.AddText(kMHighlightLineLimitColumnFileMasksOption);
+  builder.AddText(kMFileMasksOption);
   inputs.push_back(
       builder.AddStringEditFieldItem(&config_settings->file_masks,
                                      kFileMasksEditFieldWidth));

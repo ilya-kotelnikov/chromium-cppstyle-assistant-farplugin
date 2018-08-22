@@ -7,16 +7,33 @@ $ #Chromium C++ Assistant#
   This plugin provides a C++ developer, using FarManager as IDE to code in
   accordance to Chromium C++ style guide, with the following features:
 
-    + it highlights column 80 permanently.
+    + highlight column 80 in C++ source files with configurable colors;
+    + configurable file masks of C++ source files to enable the features in.
 
   ~Configure~@Configure@
 
 @Configure
 $ #Configure Chromium C++ Assistant#
 
-   #Highlight#              If this option is enabled, the plugin highlights
-   #line-limit column#      the line-limit column.
+   #File masks#             File masks to enable the features in. See 
+                          'File masks' index topic in Far Manager help for
+                          the format details (scroll down to the bottom of the
+                          Index to find the topic). By default, set to a list
+                          of well-known C++ source file masks:
+                          "*.c;*.cc;*.cpp;*.h;*.hh;*.hpp;".
 
-   #Line-limit:#            Set the line-limit number. Default: 80.
+   #Highlight#              If enabled, the plugin highlights the line-limit
+   #line-limit column#      column using the following feature subsettings:
+
+       #Line-limit#         Set the line-limit number. Default: 80.
+
+       #Forecolor#          Set color of text which appears to be in the
+                          highlighted column.
+
+       #Backcolor#          Set background color of the highlighted column.
+
+       #Backcolor if tab#   Set background color of the highlighted column for
+                          lines containing a tab in a position before the
+                          line-limit column (a simple "tabs detector").
 
   ~Contents~@Contents@

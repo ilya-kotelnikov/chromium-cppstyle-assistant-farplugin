@@ -4,13 +4,12 @@
 "&Configure"
 
 "Configure Chromium C++ Assistant"
-"Highlight line-limit column"
+"File masks:"
 "Highlight line-limit column"
 "Line-limit:"
 "Forecolor:       "
-"Backcolor normal:"
+"Backcolor:       "
 "Backcolor if tab:"
-"File masks: "
 
 "Save"
 "Cancel"
