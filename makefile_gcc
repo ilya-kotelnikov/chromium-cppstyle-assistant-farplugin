@@ -1,4 +1,9 @@
 ﻿# Plugin stuff.
+#
+# The following user-defines are supported:
+# DEBUG=1   - build the library for debugging.
+# MINICRT=1 - build the library without CRT for minimal binary size.
+#
 NAME = Chromium-CppStyle-Assistant
 NAME_SHORT = cc_assistant
 SRCS = cc_assistant.cpp \
@@ -7,11 +12,11 @@ SRCS = cc_assistant.cpp \
        dlgbuilderex/bindings/color_edit_field_item_binding.cpp \
        dlgbuilderex/bindings/uint_edit_field_item_binding.cpp \
        dlgbuilderex/plugin_dialog_builder_ex.cpp \
+       dllmain.cpp \
        editor_filename_match_cache.cpp \
        globals.cpp \
 
 # System stuff (copied and adopted from Far sources).
-MAKEFILEDIR=$(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 TOOLSDIR = far/buildtools/
 
 ifneq ($(shell echo %comspec%),%comspec%)
@@ -68,18 +73,24 @@ endif
 
 DEP_FILTER := $(TOOLSDIR)dep_filter.awk
 
-RCWIDE = -D UNICODE -D _UNICODE
 CXXWIDE = -D UNICODE -D _UNICODE
 CCWIDE = -D UNICODE -D _UNICODE
+RCWIDE = -D UNICODE -D _UNICODE
 
 ifndef DEBUG
 DIRNAME := final
-C_DEBUG := -Os -fomit-frame-pointer -DNDEBUG
+C_DEBUG := -Os -fomit-frame-pointer -D NDEBUG
 L_DEBUG := -s
 else
 DIRNAME := debug
-C_DEBUG := -O0 -g -D_DEBUG
+C_DEBUG := -O0 -g -D _DEBUG
 L_DEBUG := -O0 -g
+endif
+
+ifdef MINICRT
+DIRNAME := $(DIRNAME).minicrt
+USERCPP += -D MINICRT
+USERRC += -D MINICRT
 endif
 
 BASEDIR = ./$(DIRNAME).$(DIRBIT).gcc
@@ -111,27 +122,13 @@ endif
 RC_NAME ?= $(NAME_SHORT)
 RES = $(OBJDIR)/$(NAME_SHORT).res.o
 
-NOSTART = $(if $(NOENTRY),-nostartfiles,)
-NODEFLIBS = $(if $(NODEFLIB),-nodefaultlibs,)
-
-ifdef INCLUDECRT
-ifeq ($(DIRBIT),32)
-COMMONLIB = -lCRT
-else
-COMMONLIB = -lCRT64
-endif
-else
-COMMONLIB = 
-endif
+STDLIBFLAGS = $(if $(MINICRT),-nostdlib -e DllMain,-static-libgcc)
 
 C_FLAGS  := -m$(DIRBIT) -Wall -funsigned-char $(C_DEBUG) -fstrict-aliasing -fno-exceptions
 CXXFLAGS := $(C_FLAGS) -std=c++1z -fno-rtti -I . -I $(COMINC) $(CXXWIDE) $(USERCPP)
-CCFLAGS  := $(C_FLAGS) -I $(COMINC) $(CCWIDE) $(USERCPP)
-LNKFLAGS := -m$(DIRBIT) $(L_DEBUG) $(NOSTART) $(NODEFLIBS) \
-            -static-libgcc -static \
-            $(USERLIBSFIRST) $(COMMONLIB) \
-            -luser32 -lkernel32 -ladvapi32 -lshell32 -lole32 \
-            $(USERLIBS)
+CCFLAGS  := $(C_FLAGS) -I . -I $(COMINC) $(CCWIDE) $(USERCPP)
+LNKFLAGS := -m$(DIRBIT) $(L_DEBUG) -static $(STDLIBFLAGS) \
+            -luser32 -lkernel32 -ladvapi32 -lshell32 -lole32 $(USERLIBS)
 RCFLAGS  := -I $(COMINC) $(RCWIDE) $(USERRC)
 
 C_OBJS = $(patsubst %.c,$(OBJDIR)/%.o,$(filter %.c,$(SRCS)))

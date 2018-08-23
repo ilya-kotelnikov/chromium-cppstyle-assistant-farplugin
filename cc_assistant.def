@@ -1,4 +1,5 @@
 EXPORTS 
+  DllMain
   GetGlobalInfoW
   GetPluginInfoW
   SetStartupInfoW
