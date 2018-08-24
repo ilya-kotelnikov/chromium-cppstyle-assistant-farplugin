@@ -1,8 +1,10 @@
 ﻿# Plugin stuff.
 #
 # The following user-defines are supported:
-# DEBUG=1   - build the library for debugging.
-# MINICRT=1 - build the library without CRT for minimal binary size.
+# DEBUG          - build the library for debugging;
+# MINICRT=1      - build the library without CRT for minimal binary size;
+# USE_PROTOZOA=1 - build the library with STL replacement classes (makes sense
+#                  only without MINICRT).
 #
 NAME = Chromium-CppStyle-Assistant
 NAME_SHORT = cc_assistant
@@ -14,9 +16,13 @@ SRCS = cc_assistant.cpp \
        dlgbuilderex/plugin_dialog_builder_ex.cpp \
        dllmain.cpp \
        editor_filename_match_cache.cpp \
-       globals.cpp \
+       globals.cpp
 
-# System stuff (copied and adopted from Far sources).
+ifneq ($(MINICRT)$(USE_PROTOZOA),)
+SRCS += protozoa/cstring.cpp
+endif
+
+# System stuff (copied and adapted from Far sources).
 TOOLSDIR = far/buildtools/
 
 ifneq ($(shell echo %comspec%),%comspec%)
@@ -63,14 +69,15 @@ ifndef DIRBIT
  endif
 endif
 
-GAWK = $(strip $(call os_name, $(TOOLS_PREFIX)gawk))
-
 ifeq ($(DIRBIT),32)
  WINDRES += -F pe-i386
 else
  WINDRES += -F pe-x86-64
 endif
 
+USERCPP += -D DIRBIT=$(DIRBIT)
+
+GAWK = $(strip $(call os_name, $(TOOLS_PREFIX)gawk))
 DEP_FILTER := $(TOOLSDIR)dep_filter.awk
 
 CXXWIDE = -D UNICODE -D _UNICODE
@@ -91,6 +98,16 @@ ifdef MINICRT
 DIRNAME := $(DIRNAME).minicrt
 USERCPP += -D MINICRT
 USERRC += -D MINICRT
+else
+ifdef USE_PROTOZOA
+DIRNAME := $(DIRNAME).protozoa
+USERCPP += -D USE_PROTOZOA
+USERRC += -D USE_PROTOZOA
+endif
+endif
+
+ifneq ($(MINICRT)$(USE_PROTOZOA),)
+USERCPP += -I protozoa
 endif
 
 BASEDIR = ./$(DIRNAME).$(DIRBIT).gcc
@@ -102,32 +119,31 @@ EXT ?= dll
 DLLNAME = $(NAME).$(EXT)
 DLLFULLNAME = $(DLLDIR)/$(DLLNAME)
 
-ifeq ($(DIRBIT),32)
-DLLTOOL_M = i386
-else
-DLLTOOL_M = i386:x86-64
-endif
-
 ifndef DEF_NAME
 DEF_NAME = $(NAME_SHORT)
 endif
 ifeq ($(DEF_NAME),-)
 DEF =
-DEF_OPT =
 else
-DEF = $(NAME_SHORT).def
-DEF_OPT = -d $(DEF)
+DEF = $(DEF_NAME).def
 endif
 
 RC_NAME ?= $(NAME_SHORT)
 RES = $(OBJDIR)/$(NAME_SHORT).res.o
 
+MAP = $(patsubst %.$(EXT),%.map,$(DLLFULLNAME))
+MAP_OPT = -Xlinker -Map -Xlinker $(MAP)
+
 STDLIBFLAGS = $(if $(MINICRT),-nostdlib -e DllMain,-static-libgcc)
 
-C_FLAGS  := -m$(DIRBIT) -Wall -funsigned-char $(C_DEBUG) -fstrict-aliasing -fno-exceptions
-CXXFLAGS := $(C_FLAGS) -std=c++1z -fno-rtti -I . -I $(COMINC) $(CXXWIDE) $(USERCPP)
-CCFLAGS  := $(C_FLAGS) -I . -I $(COMINC) $(CCWIDE) $(USERCPP)
-LNKFLAGS := -m$(DIRBIT) $(L_DEBUG) -static $(STDLIBFLAGS) \
+C_FLAGS  := -m$(DIRBIT) $(C_DEBUG) -Wall \
+            -funsigned-char -fstrict-aliasing -fno-exceptions
+CXXFLAGS := $(C_FLAGS) -std=c++1z -fno-rtti \
+            -I . -I $(COMINC) $(CXXWIDE) $(USERCPP)
+CCFLAGS  := $(C_FLAGS) \
+            -I . -I $(COMINC) $(CCWIDE) $(USERCPP)
+LNKFLAGS := -m$(DIRBIT) $(L_DEBUG) $(STDLIBFLAGS) -static -shared \
+            -Wl,--kill-at -Wl,--enable-stdcall-fixup $(MAP_OPT) \
             -luser32 -lkernel32 -ladvapi32 -lshell32 -lole32 $(USERLIBS)
 RCFLAGS  := -I $(COMINC) $(RCWIDE) $(USERRC)
 
@@ -139,7 +155,6 @@ C_DEPS = $(patsubst %.c,$(OBJDIR)/%.d,$(filter %.c,$(SRCS)))
 CPP_DEPS = $(patsubst %.cpp,$(OBJDIR)/%.d,$(filter %.cpp,$(SRCS)))
 DEPS = $(strip $(C_DEPS) $(CPP_DEPS))
 endif
-MAP = $(patsubst %.$(EXT),%.map,$(DLLFULLNAME))
 
 all: $(DLLFULLNAME)
 
@@ -150,15 +165,21 @@ $(OBJDIR)/%.d: %.cpp
 	@$(MKDIR) $(@D)
 	@$(CXX) -c -MM $(CXXFLAGS) $< | \
             $(GAWK) -f $(DEP_FILTER) -v n=$(notdir $(basename $@)) \
-                                     -v r=$(patsubst %/,%,$(dir $@)) > $(call os_name,$@)
+                                     -v r=$(patsubst %/,%,$(dir $@)) \
+                                                            > $(call os_name,$@)
 
 $(OBJDIR)/%.d: %.c
 	@echo making depends for $<
 	@$(MKDIR) $(@D)
 	@$(CC) -c -MM $(CCFLAGS) $< | \
             $(GAWK) -f $(DEP_FILTER) -v n=$(notdir $(basename $@)) \
-                                     -v r=$(patsubst %/,%,$(dir $@)) > $(call os_name,$@)
+                                     -v r=$(patsubst %/,%,$(dir $@)) \
+                                                            > $(call os_name,$@)
 endif
+endif
+
+ifneq ($(MINICRT)$(USE_PROTOZOA),)
+protozoa/%:
 endif
 
 $(OBJDIR)/%.o: %.cpp
@@ -176,12 +197,10 @@ $(RES): $(RC_NAME).rc $(COMINC)/FarVersion.hpp $(COMINC)/Plugin.hpp
 	@$(MKDIR) -p $(@D)
 	@$(WINDRES) $(RCFLAGS) -i $< -o $@
 
-X_OPT = $(if $(MAP),-Xlinker -Map -Xlinker $(MAP),)
-
 $(DLLFULLNAME): $(OBJS) $(DEF)
 	@echo linking $@
 	@$(MKDIR) -p $(@D)
-	@$(CXX) -o $@ $(DEF) $(OBJS) $(LNKFLAGS) -Wl,--kill-at -Wl,--enable-stdcall-fixup -shared $(X_OPT)
+	@$(CXX) -o $@ $(DEF) $(OBJS) $(LNKFLAGS)
 	@echo copy distrib files
 	@$(CP) distrib/* $(DLLDIR)
 

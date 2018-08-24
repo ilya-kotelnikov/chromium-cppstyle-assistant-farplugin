@@ -1,0 +1,70 @@
+﻿////////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2018, Ilya Kotelnikov (ilya.kotelnikov@gmail.com)
+// All rights reserved.
+//
+// You may use, distribute and modify this code under the terms of GNU GPLv3.
+//------------------------------------------------------------------------------
+
+#pragma once
+
+namespace std {
+
+template<class T>
+constexpr T&& move(T&& t) noexcept {
+  return static_cast<T&&>(t);
+}
+
+template<class T>
+constexpr T&& move(T& t) noexcept {
+  return static_cast<T&&>(t);
+}
+
+template<class T1, class T2>
+struct pair {
+  using first_type = T1;
+  using second_type = T2;
+
+  T1 first;
+  T2 second;
+
+  pair(const pair& p) = default;
+  pair(pair&& p) = default;
+
+  pair(const T1& x, const T2& y) : first(x), second(y) {
+  }
+
+  pair(T1&& x, T2&& y) : first(move(x)), second(move(y)) {
+  }
+};
+
+template<class T1, class T2>
+pair<T1, T2> make_pair(T1&& t, T2&& u) {
+  return pair<T1, T2>(move(t), move(u));
+}
+
+template<class T1, class T2>
+pair<T1, T2> make_pair(const T1& t, T2&& u) {
+  return pair<T1, T2>(T1(t), move(u));
+}
+
+template<class T1, class T2>
+pair<T1, T2> make_pair(T1&& t, const T2& u) {
+  return pair<T1, T2>(move(t), T2(u));
+}
+
+template<class T1, class T2>
+pair<T1, T2> make_pair(T1& t, T2&& u) {
+  return pair<T1, T2>(T1(t), move(u));
+}
+
+template<class T1, class T2>
+pair<T1, T2> make_pair(T1&& t, T2& u) {
+  return pair<T1, T2>(move(t), T2(u));
+}
+
+template<class T1, class T2>
+pair<T1, T2> make_pair(const T1& t, const T2& u) {
+  return pair<T1, T2>(t, u);
+}
+
+}  // namespace std

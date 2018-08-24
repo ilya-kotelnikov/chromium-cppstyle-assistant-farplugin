@@ -1,0 +1,49 @@
+﻿////////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2018, Ilya Kotelnikov (ilya.kotelnikov@gmail.com)
+// All rights reserved.
+//
+// You may use, distribute and modify this code under the terms of GNU GPLv3.
+//------------------------------------------------------------------------------
+
+#pragma once
+
+#include <stdint.h>
+
+namespace std {
+
+template<class T, size_t N>
+struct array {
+ public:
+  using value_type = T;
+  using size_type = size_t;
+  using reference = value_type&;
+  using const_reference = const value_type&;
+
+  array() = default;
+  ~array() = default;
+
+  constexpr reference operator[](size_type pos) {
+    return data_[pos];
+  }
+
+  constexpr const_reference operator[](size_type pos) const {
+    return data_[pos];
+  }
+
+  constexpr T* data() noexcept {
+    return data_;
+  }
+
+  constexpr const T* data() const noexcept {
+    return data_;
+  }
+
+  constexpr size_type size() const noexcept {
+    return N;
+  }
+
+ private:
+  T data_[N];
+};
+
+}  // namespace std

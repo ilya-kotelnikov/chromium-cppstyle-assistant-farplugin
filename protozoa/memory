@@ -1,0 +1,54 @@
+﻿////////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2018, Ilya Kotelnikov (ilya.kotelnikov@gmail.com)
+// All rights reserved.
+//
+// You may use, distribute and modify this code under the terms of GNU GPLv3.
+//------------------------------------------------------------------------------
+
+#pragma once
+
+namespace std {
+
+template<class T>
+class unique_ptr {
+ public:
+  using element_type = T;
+  using pointer = T*;
+
+  unique_ptr(T* p = nullptr) : p_(p) {
+  }
+
+  ~unique_ptr() {
+    if (p_)
+      delete p_;
+  }
+
+  void reset(T* p = nullptr) noexcept {
+    if (p_ != p) {
+      if (p_)
+        delete p_;
+      p_ = p;
+    }
+  }
+
+  T* get() const noexcept {
+    return p_;
+  }
+
+  explicit operator bool() const noexcept {
+    return p_ != nullptr;
+  }
+
+  T& operator*() const {
+    return *p_;
+  }
+
+  T* operator->() const noexcept {
+    return p_;
+  }
+
+ private:
+  T* p_;
+};
+
+}  // namespace std

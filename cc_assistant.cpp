@@ -7,7 +7,7 @@
 
 #include <array>
 #include <cstring>  // for std::memset
-#include <vector>
+#include <list>
 
 #include <Plugin.hpp>
 
@@ -73,7 +73,7 @@ bool ShowConfigDialog() {
 
   // Gather input fields references to be able to update their initial values
   // later in case of dialog re-displaying.
-  std::vector<FarDialogItem*> inputs;
+  std::list<FarDialogItem*> inputs;
 
   // Add common 'file masks' text edit field at the top.
   constexpr int kFileMasksEditFieldWidth = 40;
@@ -93,7 +93,7 @@ bool ShowConfigDialog() {
   builder.AddEmptyLine();
 
   // Add it's subsettings aligned with the main checkbox label.
-  std::vector<FarDialogItem*> subitems;
+  std::list<FarDialogItem*> subitems;
 
   // Add line-limit column index option.
   inputs.push_back(builder.AddUIntEditFieldItem(&hlcs.column_index, 3));

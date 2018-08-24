@@ -1,0 +1,19 @@
+﻿////////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2018, Ilya Kotelnikov (ilya.kotelnikov@gmail.com)
+// All rights reserved.
+//
+// You may use, distribute and modify this code under the terms of GNU GPLv3.
+//------------------------------------------------------------------------------
+
+#pragma once
+
+#include <stdint.h>
+
+namespace std {
+
+// Note: the implementation of the routine assumes that |dst| is 4-bytes aligned
+// which should be generally true if |dst| was allocated by typical
+// operator new() or malloc() or on stack.
+void* memset(void* dst, int val, size_t size);
+
+}  // namespace std

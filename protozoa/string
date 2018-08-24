@@ -1,0 +1,242 @@
+﻿////////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2018, Ilya Kotelnikov (ilya.kotelnikov@gmail.com)
+// All rights reserved.
+//
+// You may use, distribute and modify this code under the terms of GNU GPLv3.
+//------------------------------------------------------------------------------
+
+#pragma once
+
+#include <stdint.h>
+
+#include <windows.h>
+
+#include <utility>
+
+namespace std {
+
+//
+// Utilities for buffers of chars (standart C string functions).
+//
+template<class T> T* strcpy(T*, const T*);
+template<class T> int strlen(const T*);
+template<class T> int strcmp(const T*, const T*);
+
+template<> inline char* strcpy(char* d, const char* s) {
+  return ::lstrcpyA(d, s);
+}
+template<> inline int strlen(const char* s) {
+  return ::lstrlenA(s);
+}
+template<> inline strcmp(const char* s0, const char* s1) {
+  return ::lstrcmpA(s0, s1);
+}
+
+template<> inline wchar_t* strcpy(wchar_t* d, const wchar_t* s) {
+  return ::lstrcpyW(d, s);
+}
+template<> inline int strlen(const wchar_t* s) {
+  return ::lstrlenW(s);
+}
+template<> inline strcmp(const wchar_t* s0, const wchar_t* s1) {
+  return ::lstrcmpW(s0, s1);
+}
+
+//
+// Note: this class doesn't support nulls inside unlike its "big brother".
+//
+template<class T>
+class basic_string {
+ public:
+  using value_type = T;
+  using size_type = size_t;
+  using reference = value_type&;
+  using const_reference = const value_type&;
+
+  static constexpr size_t npos = 0xffffffffUL;
+
+  basic_string() : data_(basic_string::empty_data()), size_(0), capacity_(0) {
+  }
+
+  basic_string(basic_string&& r)
+      : data_(r.data_), size_(r.size_), capacity_(r.capacity_) {
+    r.data_ = basic_string::empty_data();
+    r.capacity_ = r.size_ = 0;
+  }
+
+  basic_string(const basic_string& r)
+      : data_(basic_string::empty_data()), size_(0), capacity_(0) {
+    if (r.size_ > 0) {
+      AllocData(r.size_);
+      strcpy<T>(data_, r.data_);
+    }
+  }
+
+  basic_string(const T* r_data) :
+      data_(basic_string::empty_data()), size_(0), capacity_(0) {
+    const size_t r_size = strlen<T>(r_data);
+    if (r_size > 0) {
+      AllocData(r_size);
+      strcpy<T>(data_, r_data);
+    }
+  }
+
+  basic_string(size_t r_size, T c)
+      : data_(basic_string::empty_data()), size_(0), capacity_(0) {
+    if (r_size > 0) {
+      AllocData(r_size);
+      T* p = data_;
+      for (size_t i = 0; i < size_; ++i)
+        *p++ = c;
+      *p = 0;
+    }
+  }
+
+  ~basic_string() {
+    if (size_ > 0)
+      delete data_;
+  }
+
+  basic_string& operator=(basic_string&& r) {
+    return MoveString(&r);
+  }
+
+  basic_string& operator=(const basic_string& r) {
+    return CopyData(r.data_, r.size_);
+  }
+
+  basic_string& operator=(const T* r_data) {
+    return CopyData(r_data, strlen<T>(r_data));
+  }
+
+  bool operator==(const basic_string& r) const {
+    return strcmp<T>(data_, r.data_) == 0;
+  }
+
+  bool operator!=(const basic_string& r) const {
+    return strcmp<T>(data_, r.data_) != 0;
+  }
+
+  bool empty() const {
+    return size_ == 0;
+  }
+
+  basic_string& assign(basic_string&& r) {
+    return MoveString(&r);
+  }
+
+  basic_string& assign(const basic_string& r) {
+    return operator=(r);
+  }
+
+  basic_string& assign(const T* r) {
+    return operator=(r);
+  }
+
+  void resize(size_t r_size) {
+    if (r_size == 0) {
+      clear();
+      return;
+    }
+    if (capacity_ < r_size) {
+      T* old_data = (size_ > 0) ? data_ : nullptr;
+      AllocData(r_size);
+      if (old_data) {
+        strcpy<T>(data_, old_data);
+        delete old_data;
+      } else {
+        *(data_) = 0;
+      }
+    } else {
+      size_ = r_size;
+      *(data_ + size_) = 0;
+    }
+  }
+
+  size_t find_last_of(const T* chars) const {
+    const T* pd = data_ + size_;
+    while (pd > data_) {
+      const T ch = (*--pd);
+      for (const T* pc = chars; (*pc); ++pc) {
+        if (ch == (*pc))
+          return pd - data_;
+      }
+    }
+    return basic_string::npos;
+  }
+
+  basic_string substr(size_t pos) const {
+    return basic_string(data_ + pos);
+  }
+
+  void clear() {
+    if (size_ > 0) {
+      delete data_;
+      data_ = basic_string::empty_data();
+      capacity_ = size_ = 0;
+    }
+  }
+
+  const T* c_str() const {
+    return data_;
+  }
+
+  T* data() {
+    return data_;
+  }
+
+ private:
+  static constexpr size_t alloc_block_size = 32;
+
+  static T* empty_data() {
+    static T null_char = 0;
+    return &null_char;
+  }
+
+  void AllocData(size_t r_size) {
+    capacity_ = (r_size / alloc_block_size + 1) * alloc_block_size - 1;
+    data_ = new T[capacity_ + 1];
+    size_ = r_size;
+    *(data_ + size_) = 0;
+  }
+
+  basic_string& MoveString(basic_string* r) {
+    if (r->size_ == 0) {
+      clear();
+      return *this;
+    }
+    if (size_ > 0)
+      delete data_;
+    data_ = r->data_;
+    size_ = r->size_;
+    capacity_ = r->capacity_;
+    r->data_ = basic_string::empty_data();
+    r->capacity_ = r->size_ = 0;
+    return *this;
+  }
+
+  basic_string& CopyData(const T* r_data, size_t r_size) {
+    if (r_size == 0) {
+      clear();
+      return *this;
+    }
+    if (capacity_ < r_size) {
+      if (size_ > 0)
+        delete data_;
+      AllocData(r_size);
+    } else {
+      size_ = r_size;
+      *(data_ + size_) = 0;
+    }
+    strcpy<T>(data_, r_data);
+    return *this;
+  }
+
+  T* data_;
+  size_t size_, capacity_;
+};
+
+using string = basic_string<char>;
+using wstring = basic_string<wchar_t>;
+
+}  // namespace std

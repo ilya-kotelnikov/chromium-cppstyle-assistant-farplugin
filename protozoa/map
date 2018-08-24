@@ -1,0 +1,99 @@
+﻿////////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2018, Ilya Kotelnikov (ilya.kotelnikov@gmail.com)
+// All rights reserved.
+//
+// You may use, distribute and modify this code under the terms of GNU GPLv3.
+//------------------------------------------------------------------------------
+
+#pragma once
+
+#include <list>
+#include <utility>
+
+namespace std {
+
+//
+// Note: this class doesn't implement an effective map really - it just provides
+// the std::map interface to a list of (key, data) pairs sorted by key (but
+// find() doesn't use the advantage of the sorted order though it could...).
+//
+template<class K, class T>
+class map {
+ public:
+  using key_type = K;
+  using mapped_type = T;
+  using value_type = pair<K, T>;
+  using size_type = size_t;
+  using reference = value_type&;
+  using const_reference = const value_type&;
+  using iterator = typename list<value_type>::iterator;
+  using const_iterator = typename list<value_type>::const_iterator;
+
+  map() {
+  }
+
+  ~map() {
+  }
+
+  iterator find(const K& key) {
+    for (iterator i = list_.begin(); i != list_.end(); ++i)
+      if (i->first == key)
+        return i;
+    return end();
+  }
+
+  const_iterator find(const K& key) const {
+    for (const_iterator i = list_.cbegin(); i != list_.cend(); ++i)
+      if (i->first == key)
+        return i;
+    return cend();
+  }
+
+  pair<iterator, bool> insert(value_type&& value) {
+    iterator i = list_.begin();
+    for (; i != list_.end(); ++i) {
+      if (i->first == value.first)
+        return pair(i, false);
+      if (i->first > value.first)
+        break;
+    }
+    return pair(list_.insert(i, move(value)), true);
+  }
+
+  size_type erase(const key_type& key) {
+    iterator i = find(key);
+    if (i == end())
+      return 0;
+    erase(i);
+    return 1;
+  }
+
+  iterator erase(iterator pos) {
+    return list_.erase(pos);
+  }
+
+  void clear() {
+    list_.clear();
+  }
+
+  iterator begin() {
+    return list_.begin();
+  }
+
+  iterator end() {
+    return list_.end();
+  }
+
+  const_iterator cbegin() const {
+    return list_.cbegin();
+  }
+
+  const_iterator cend() const {
+    return list_.cend();
+  }
+
+ private:
+  list<value_type> list_;
+};
+
+}  // namespace std

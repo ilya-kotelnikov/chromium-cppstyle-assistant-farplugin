@@ -1,0 +1,183 @@
+﻿////////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2018, Ilya Kotelnikov (ilya.kotelnikov@gmail.com)
+// All rights reserved.
+//
+// You may use, distribute and modify this code under the terms of GNU GPLv3.
+//------------------------------------------------------------------------------
+
+#pragma once
+
+#include <stdint.h>
+
+#include <utility>
+
+namespace std {
+
+template<class T>
+class list {
+ public:
+  using value_type = T;
+  using size_type = size_t;
+  using reference = value_type&;
+  using const_reference = const value_type&;
+  using pointer = value_type*;
+  using const_pointer = const value_type*;
+
+  list() : head_(nullptr), tail_(nullptr) {
+  }
+
+  ~list() {
+    clear();
+  }
+
+  void push_back(const T& value) {
+    if (head_) {
+      tail_->next = new Link(tail_, value, nullptr);
+      tail_ = tail_->next;
+    } else {
+      tail_ = head_ = new Link(nullptr, value, nullptr);
+    }
+  }
+
+  void push_back(T&& value) {
+    if (head_) {
+      tail_->next = new Link(tail_, move(value), nullptr);
+      tail_ = tail_->next;
+    } else {
+      tail_ = head_ = new Link(nullptr, move(value), nullptr);
+    }
+  }
+
+  // Must not be called for an empty list! No checks are done.
+  reference back() {
+    return tail_->data;
+  }
+
+  // Must not be called for an empty list! No checks are done.
+  const_reference back() const {
+    return tail_->data;
+  }
+
+  void clear() {
+    tail_ = nullptr;
+    while (head_) {
+      Link* next = head_->next;
+      delete head_;
+      head_ = next;
+    }
+  }
+
+  template<class R, class P>
+  class iterator_impl;
+
+  using iterator = iterator_impl<reference, pointer>;
+  using const_iterator = iterator_impl<const_reference, const_pointer>;
+
+ private:
+  struct Link {
+    Link* prev;
+    T data;
+    Link* next;
+
+    Link(Link* prev, const T& data, Link* next)
+        : prev(prev), data(data), next(next) {
+    }
+    Link(Link* prev, T&& data, Link* next)
+        : prev(prev), data(data), next(next) {
+    }
+
+    friend iterator;
+    friend const_iterator;
+  };
+
+ public:
+  template<class R, class P>
+  class iterator_impl {
+   public:
+    explicit iterator_impl(Link* link) : link_(link) {
+    }
+
+    iterator_impl& operator++() {  // prefix ++
+      link_ = link_->next;
+      return *this;
+    }
+
+    iterator_impl operator++(int) {  // postfix ++
+      Link* curr = link_;
+      link_ = link_->next;
+      return iterator_impl(curr);
+    }
+
+    bool operator==(iterator_impl other) const {
+      return link_ == other.link_;
+    }
+
+    bool operator!=(iterator_impl other) const {
+      return link_ != other.link_;
+    }
+
+    R operator*() const {
+      return link_->data;
+    }
+
+    P operator->() const {
+      return &link_->data;
+    }
+
+   private:
+    Link* link_;
+
+    friend list;
+  };
+
+  iterator begin() {
+    return iterator(head_);
+  }
+
+  iterator end() {
+    return iterator(nullptr);
+  }
+
+  const_iterator cbegin() const {
+    return const_iterator(head_);
+  }
+
+  const_iterator cend() const {
+    return const_iterator(tail_);
+  }
+
+  iterator erase(iterator pos) {
+    iterator curr = pos++;
+
+    Link* link = curr.link_;
+    ((link->prev) ? link->prev->next : head_) = link->next;
+    ((link->next) ? link->next->prev : tail_) = link->prev;
+    delete link;
+
+    return pos;
+  }
+
+  iterator insert(iterator pos, T&& value) {
+    Link* next = pos.link_;
+    Link* link =
+        new Link((next) ? next->prev : tail_, move(value), next);
+
+    if (next == head_)
+      head_ = link;
+    else
+      link->prev->next = link;
+
+    if (next)
+      next->prev = link;
+    else
+      tail_ = link;
+
+    return iterator(link);
+  }
+
+ private:
+  Link* head_;
+  Link* tail_;
+};
+
+}  // namespace std
