@@ -33,9 +33,10 @@ void EditorFileNameMatchCache::SetFileMasks(const std::wstring& file_masks) {
 }
 
 void EditorFileNameMatchCache::SetEditorFileName(
-    intptr_t editor_id, const wchar_t* saved_as_filename) {
-  std::wstring filename = (saved_as_filename) ? std::wstring(saved_as_filename)
-                                              : AskEditorForFileName(editor_id);
+    intptr_t editor_id, const wchar_t* saved_as_filepath) {
+  std::wstring filename =
+      (saved_as_filepath) ? ExtractFileName(saved_as_filepath)
+                          : AskEditorForFileName(editor_id);
 
   auto it = editor_to_match_map_.find(editor_id);
   if (it == editor_to_match_map_.end()) {
@@ -92,20 +93,25 @@ EditorFileNameMatchCache::FindEditorMatchDataOrAdd(intptr_t editor_id) {
 
 std::wstring EditorFileNameMatchCache::AskEditorForFileName(
     intptr_t editor_id) {
-  const size_t filename_buffer_size =
+  const size_t filepath_buffer_size =
        g_psi().EditorControl(editor_id, ECTL_GETFILENAME, 0, nullptr);
-  if (filename_buffer_size == 0)
+  if (filepath_buffer_size == 0)
     return std::wstring();
 
-  std::wstring filename(filename_buffer_size, 0);
+  std::wstring filepath(filepath_buffer_size, 0);
   g_psi().EditorControl(editor_id, ECTL_GETFILENAME,
-                        filename_buffer_size, filename.data());
-  filename.resize(filename_buffer_size - 1);  // wstring adds its own null char.
+                        filepath_buffer_size, filepath.data());
+  filepath.resize(filepath_buffer_size - 1);  // wstring adds its own null char.
 
   // Cut the path - we use only the filename (a portion after the last slash).
-  const size_t last_slash_pos = filename.find_last_of(L"/\\");
+  return ExtractFileName(std::move(filepath));
+}
+
+std::wstring EditorFileNameMatchCache::ExtractFileName(
+    std::wstring&& filepath) {
+  const size_t last_slash_pos = filepath.find_last_of(L"/\\");
   return (last_slash_pos == std::wstring::npos)
-             ? filename : filename.substr(last_slash_pos + 1);
+             ? std::move(filepath) : filepath.substr(last_slash_pos + 1);
 }
 
 }  // namespace cc_assistant

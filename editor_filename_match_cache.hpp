@@ -20,7 +20,7 @@ class EditorFileNameMatchCache {
   void SetFileMasks(const std::wstring& file_masks);
 
   void SetEditorFileName(intptr_t editor_id,
-                         const wchar_t* saved_as_filename = nullptr);
+                         const wchar_t* saved_as_filepath = nullptr);
   void DropEditor(intptr_t editor_id);
 
   bool GetEditorMatchOrFileNameRef(intptr_t editor_id,
@@ -46,6 +46,7 @@ class EditorFileNameMatchCache {
 
   MatchData* FindEditorMatchDataOrAdd(intptr_t editor_id);
   std::wstring AskEditorForFileName(intptr_t editor_id);
+  std::wstring ExtractFileName(std::wstring&& filepath);
 
   std::wstring file_masks_;
   std::map<intptr_t, MatchData> editor_to_match_map_;
