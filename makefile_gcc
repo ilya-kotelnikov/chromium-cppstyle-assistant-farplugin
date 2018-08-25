@@ -1,10 +1,10 @@
 ﻿# Plugin stuff.
 #
 # The following user-defines are supported:
-# DEBUG          - build the library for debugging;
-# MINICRT=1      - build the library without CRT for minimal binary size;
-# USE_PROTOZOA=1 - build the library with STL replacement classes (makes sense
-#                  only without MINICRT).
+# DEBUG               - build the library for debugging;
+# MINICRT=1           - build the library without CRT for minimal binary size;
+# USE_PROTOZOA_STL=1  - build the library with STL replacement classes (makes
+#                       sense only without MINICRT).
 #
 NAME = Chromium-CppStyle-Assistant
 NAME_SHORT = cc_assistant
@@ -18,8 +18,10 @@ SRCS = cc_assistant.cpp \
        editor_filename_match_cache.cpp \
        globals.cpp
 
-ifneq ($(MINICRT)$(USE_PROTOZOA),)
-SRCS += protozoa/cstring.cpp
+ifdef MINICRT
+SRCS += protozoa/crt/crt_gcc.cpp \
+        protozoa/crt/memory.cpp \
+        protozoa/crt/string.cpp
 endif
 
 # System stuff (copied and adapted from Far sources).
@@ -96,18 +98,14 @@ endif
 
 ifdef MINICRT
 DIRNAME := $(DIRNAME).minicrt
-USERCPP += -D MINICRT
+USERCPP += -D MINICRT -I protozoa/stl -I protozoa/crt
 USERRC += -D MINICRT
 else
-ifdef USE_PROTOZOA
-DIRNAME := $(DIRNAME).protozoa
-USERCPP += -D USE_PROTOZOA
-USERRC += -D USE_PROTOZOA
+ifdef USE_PROTOZOA_STL
+DIRNAME := $(DIRNAME).protozoa_stl
+USERCPP += -D USE_PROTOZOA_STL -I protozoa/stl
+USERRC += -D USE_PROTOZOA_STL
 endif
-endif
-
-ifneq ($(MINICRT)$(USE_PROTOZOA),)
-USERCPP += -I protozoa
 endif
 
 BASEDIR = ./$(DIRNAME).$(DIRBIT).gcc
@@ -178,8 +176,8 @@ $(OBJDIR)/%.d: %.c
 endif
 endif
 
-ifneq ($(MINICRT)$(USE_PROTOZOA),)
-protozoa/%:
+ifneq ($(MINICRT)$(USE_PROTOZOA_STL),)
+protozoa/stl/%:
 endif
 
 $(OBJDIR)/%.o: %.cpp

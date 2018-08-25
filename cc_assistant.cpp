@@ -6,8 +6,9 @@
 //------------------------------------------------------------------------------
 
 #include <array>
-#include <cstring>  // for std::memset
 #include <list>
+
+#include <string.h>
 
 #include <Plugin.hpp>
 
@@ -181,7 +182,7 @@ bool ShowConfigDialog() {
 // the function handles itself) or -1 if the menu has been cancelled.
 int ShowMenuAndReturnChosenMenuIndex() {
   std::array<FarMenuItem, 1> menu_items;
-  std::memset(menu_items.data(), 0, menu_items.size() * sizeof(FarMenuItem));
+  memset(menu_items.data(), 0, menu_items.size() * sizeof(FarMenuItem));
   menu_items[0].Text = GetMsg(kMConfigure);
 
   while(true) {

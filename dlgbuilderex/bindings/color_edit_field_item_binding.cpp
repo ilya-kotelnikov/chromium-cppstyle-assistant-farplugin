@@ -13,7 +13,7 @@
 
 namespace {
 
-constexpr wchar_t kColorEditFieldValueMask[] = L"HHHHHH";  // 'RRGGBB' hex.
+constexpr const wchar_t kColorEditFieldValueMask[] = L"HHHHHH";  // 'RRGGBB'.
 
 void SetColorValueToHexString(COLORREF value, wchar_t* buffer, size_t size);
 

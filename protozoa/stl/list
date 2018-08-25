@@ -30,6 +30,24 @@ class list {
     clear();
   }
 
+  void push_front(const T& value) {
+    if (head_) {
+      head_->prev = new Link(nullptr, value, head_);
+      head_ = head_->prev;
+    } else {
+      tail_ = head_ = new Link(nullptr, value, nullptr);
+    }
+  }
+
+  void push_front(T&& value) {
+    if (head_) {
+      head_->prev = new Link(nullptr, move(value), head_);
+      head_ = head_->prev;
+    } else {
+      tail_ = head_ = new Link(nullptr, move(value), nullptr);
+    }
+  }
+
   void push_back(const T& value) {
     if (head_) {
       tail_->next = new Link(tail_, value, nullptr);
