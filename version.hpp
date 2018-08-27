@@ -7,7 +7,7 @@
 
 #include <FarVersion.hpp>
 
-#define PLUGIN_BUILD 1
+#define PLUGIN_BUILD 3
 #define PLUGIN_NAME L"Chromium CppStyle Assistant"
 #define PLUGIN_DESC L"Chromium C++ style assistant for FarManager"
 #define PLUGIN_AUTHOR L"ilya.kotelnikov@gmail.com"
