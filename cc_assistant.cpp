@@ -219,7 +219,34 @@ int GetCommandIdForMacroString(const wchar_t* macro_string_value) {
   return result_command_id;
 }
 
-void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
+intptr_t GetLineTextPositionCorrespondingToScreenOne(intptr_t editor_id,
+                                                     intptr_t line_index,
+                                                     intptr_t screen_position) {
+  EditorConvertPos ecp = { sizeof(EditorConvertPos) };
+  ecp.StringNumber = line_index;
+  ecp.SrcPos = screen_position;
+  g_psi().EditorControl(editor_id, ECTL_TABTOREAL, 0, &ecp);
+  return ecp.DestPos;
+}
+
+void ColorizeLinePositions(intptr_t editor_id, intptr_t line_index,
+                           intptr_t text_start_pos, intptr_t text_end_pos,
+                           COLORREF forecolor, COLORREF backcolor) {
+  EditorColor ec = { sizeof(EditorColor) };
+  ec.StringNumber = line_index;
+  ec.ColorItem = -1;
+  ec.StartPos = text_start_pos;
+  ec.EndPos = text_end_pos;
+  ec.Priority = EDITOR_COLOR_NORMAL_PRIORITY;
+  ec.Flags = ECF_AUTODELETE;
+  ec.Color.Flags = 0;
+  ec.Color.ForegroundColor = forecolor;
+  ec.Color.BackgroundColor = backcolor; 
+  ec.Owner = g_plugin_guid;
+  g_psi().EditorControl(editor_id, ECTL_ADDCOLOR, 0, &ec);
+}
+
+void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {    
   auto& hlcs =
       ConfigSettings::GetInstance()->highlight_linelimit_column_settings;
 
@@ -244,28 +271,99 @@ void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
     if (curr_visible_line_index >= editor_info.TotalLines)
       break;
 
+    // Highlight line-limit column.
     // Watch for tabs in the line: ensure the target column is right.
-    EditorConvertPos ecp = { sizeof(EditorConvertPos) };
-    ecp.StringNumber = curr_visible_line_index;
-    ecp.SrcPos = hlcs.column_index;
-    g_psi().EditorControl(editor_id, ECTL_TABTOREAL, 0, &ecp);
-    const intptr_t adjusted_column_index = ecp.DestPos;
+    const intptr_t text_position_to_highlight =
+        GetLineTextPositionCorrespondingToScreenOne(editor_id,
+                                                    curr_visible_line_index,
+                                                    hlcs.column_index);
     const bool tabs_detected =
-        (adjusted_column_index != static_cast<int>(hlcs.column_index));
+        (text_position_to_highlight != static_cast<int>(hlcs.column_index));
 
-    EditorColor ec = { sizeof(EditorColor) };
-    ec.StringNumber = curr_visible_line_index;
-    ec.ColorItem = -1;
-    ec.StartPos = adjusted_column_index;
-    ec.EndPos = adjusted_column_index;
-    ec.Priority = EDITOR_COLOR_NORMAL_PRIORITY;
-    ec.Flags = ECF_AUTODELETE;
-    ec.Color.Flags = 0;
-    ec.Color.ForegroundColor = hlcs.forecolor;
-    ec.Color.BackgroundColor = (tabs_detected) ? hlcs.backcolor_if_tabs
-                                               : hlcs.backcolor; 
-    ec.Owner = g_plugin_guid;
-    g_psi().EditorControl(editor_id, ECTL_ADDCOLOR, 0, &ec);
+    ColorizeLinePositions(editor_id,
+                          curr_visible_line_index,
+                          text_position_to_highlight,
+                          text_position_to_highlight,
+                          hlcs.forecolor,
+                          (tabs_detected) ? hlcs.backcolor_if_tabs
+                                          : hlcs.backcolor);
+
+    // Highlight whitespaces at line end.
+    EditorGetString egs = { sizeof(EditorGetString) };
+    egs.StringNumber = curr_visible_line_index;
+    if (g_psi().EditorControl(editor_id, ECTL_GETSTRING, 0, &egs)) {
+      // Forecolor may have any value as whitespaces/tabs are not "visible"
+      // usually (though Far has an option to show whitespaces/tabs with
+      // special symbols, but then our feature loses any sense and may be
+      // simply turned off).
+      constexpr COLORREF kHighlightWhitespaceForecolor = 0x00ffffff;
+      constexpr COLORREF kHighlightWhitespaceBackcolor = 0x007f00ff;
+
+      // Skip empty lines.
+      const wchar_t* line_postend_ptr = egs.StringText + egs.StringLength;
+      if (line_postend_ptr > egs.StringText) {
+        // Scan the line from its end: look for whitespaces/tabs and stop just
+        // after the first non-whitespace symbol.
+        const wchar_t* line_first_whitespace_ptr = line_postend_ptr;
+        do {
+          const wchar_t c = *(line_first_whitespace_ptr - 1);
+          if (c != ' ' && c != '\t')
+             break;
+        } while (--line_first_whitespace_ptr != egs.StringText);
+
+        // If found some whitespaces, then colorize the positions.
+        if (line_first_whitespace_ptr != line_postend_ptr) {
+          intptr_t whitespaces_start_pos =
+              line_first_whitespace_ptr - egs.StringText;
+          intptr_t whitespaces_postend_pos = line_postend_ptr - egs.StringText;
+
+          // No highlight before cursor to avoid "blinking" while user is typing
+          // a new text (but only while cursor is not in a "free flight").
+          if (curr_visible_line_index == editor_info.CurLine) {
+            const bool cursor_beyond_eol =
+                (editor_info.Options & EOPT_CURSORBEYONDEOL) ==
+                    EOPT_CURSORBEYONDEOL &&
+                editor_info.CurPos > whitespaces_postend_pos;
+
+            if (!cursor_beyond_eol &&
+                whitespaces_start_pos < editor_info.CurPos) {
+              whitespaces_start_pos = editor_info.CurPos;
+            }
+          }
+
+          if (whitespaces_start_pos < whitespaces_postend_pos) {
+            // Exclude text selection as it already "highlights" whitespaces in
+            // its own way.
+            if (egs.SelStart >= 0) {
+              if (whitespaces_start_pos < egs.SelStart) {
+                ColorizeLinePositions(editor_id,
+                                      curr_visible_line_index,
+                                      whitespaces_start_pos,
+                                      egs.SelStart - 1,
+                                      kHighlightWhitespaceForecolor,
+                                      kHighlightWhitespaceBackcolor);
+              }
+
+              if (egs.SelEnd >= 0 && whitespaces_postend_pos > egs.SelEnd) {
+                if (whitespaces_start_pos < egs.SelEnd)
+                  whitespaces_start_pos = egs.SelEnd;
+              } else {
+                whitespaces_start_pos = whitespaces_postend_pos;
+              }
+            }
+
+            if (whitespaces_start_pos < whitespaces_postend_pos) {
+              ColorizeLinePositions(editor_id,
+                                    curr_visible_line_index,
+                                    whitespaces_start_pos,
+                                    whitespaces_postend_pos - 1,
+                                    kHighlightWhitespaceForecolor,
+                                    kHighlightWhitespaceBackcolor);
+            }
+          }
+        }
+      }
+    }
   }
 }
 
