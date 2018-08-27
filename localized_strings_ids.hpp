@@ -23,8 +23,13 @@ enum {
   kMHighlightLineLimitColumnBackcolorOption,
   kMHighlightLineLimitColumnBackcolorIfTabsOption,
 
+  kMHighlightWhitespacesAtLineEndEnabledOption,
+  kMHighlightWhitespacesAtLineEndBackcolorOption,
+
   kMSave,
   kMCancel,
+
+  kMHelpHint,
 };
 
 }  // namespace cc_assistant

@@ -7,15 +7,17 @@ $ #Chromium C++ Assistant#
   This plugin provides a C++ developer, using FarManager as IDE to code in
   accordance to Chromium C++ style guide, with the following features:
 
+    + configurable file masks of C++ source files to enable the features in;
     + highlight column 80 in C++ source files with configurable colors;
-    + configurable file masks of C++ source files to enable the features in.
+    + highlight whitespaces and tabs at line ends in C++ source files with
+      configurable color.
 
   ~Configure~@Configure@
 
 @Configure
 $ #Configure Chromium C++ Assistant#
 
-   #File masks#             File masks to enable the features in. See 
+   #File masks#             File masks to enable the features in. See
                           'File masks' index topic in Far Manager help for
                           the format details (scroll down to the bottom of the
                           Index to find the topic). By default, set to a list
@@ -35,5 +37,16 @@ $ #Configure Chromium C++ Assistant#
        #Backcolor if tab#   Set background color of the highlighted column for
                           lines containing a tab in a position before the
                           line-limit column (a simple "tabs detector").
+
+   #Highlight whitespaces#  If enabled, the plugin highlights whitespaces and
+   #at line ends#           tabs detected at line ends. To avoid "blinking"
+                          while user is typing new text no highlight happens
+                          before the cursor position. Also no highlight happens
+                          inside of text selection block as it already reveals
+                          whitespaces and tabs well. The feature provides the
+                          following subsetting:
+
+       #Backcolor#          Set background color of the highlighted whitespaces
+                          and tabs.
 
   ~Contents~@Contents@

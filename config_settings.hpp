@@ -27,13 +27,25 @@ class ConfigSettings {
     HighlightLineLimitColumnSettings();
   };
 
+  // "Highlight whitespaces at line end" feature settings.
+  struct HighlightWhitespacesAtLineEndSettings {
+    int enabled;
+    COLORREF backcolor;
+
+    HighlightWhitespacesAtLineEndSettings();
+  };
+
   std::wstring file_masks;
-  HighlightLineLimitColumnSettings highlight_linelimit_column_settings; 
+  HighlightLineLimitColumnSettings highlight_linelimit_column_settings;
+  HighlightWhitespacesAtLineEndSettings
+      highlight_whitespaces_at_line_end_settings;
 
   static ConfigSettings* GetInstance();
 
   void ReLoadFromFarStorage();
   void SaveToFarStorage() const;
+
+  bool IsAtLeastOneFeatureOn() const;
 
   // The function returns null if all the features are off in the settings or
   // file masks are empty (the object is useless in these cases, so it is

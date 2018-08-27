@@ -38,6 +38,12 @@ PluginDialogBuilderEx::PluginDialogBuilderEx(
 PluginDialogBuilderEx::~PluginDialogBuilderEx() {
 }
 
+FarDialogItem* PluginDialogBuilderEx::AddCenteredText(const wchar_t* label) {
+  FarDialogItem* item = PluginDialogBuilder::AddText(label);
+  item->Flags |= DIF_CENTERTEXT;
+  return item;
+}
+
 FarDialogItem* PluginDialogBuilderEx::AddCheckboxItem(
     const wchar_t* label, int* option_var, int checked_state_value_mask,
     bool three_state) {

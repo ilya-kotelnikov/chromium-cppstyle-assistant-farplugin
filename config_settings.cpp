@@ -25,6 +25,12 @@ HighlightLineLimitColumnSettings::HighlightLineLimitColumnSettings()
           kHighlightLineLimitColumnBackcolorIfTabsSettingDefault) {
 }
 
+ConfigSettings::
+HighlightWhitespacesAtLineEndSettings::HighlightWhitespacesAtLineEndSettings()
+    : enabled(kHighlightWhitespacesAtLineEndEnabledSettingDefault),
+      backcolor(kHighlightWhitespacesAtLineEndBackcolorSettingDefault) {
+}
+
 // static
 ConfigSettings* ConfigSettings::GetInstance() {
   static ConfigSettings instance;
@@ -53,6 +59,14 @@ void ConfigSettings::ReLoadFromFarStorage() {
       storage.Get(0, kHighlightLineLimitColumnBackcolorIfTabsSettingName,
                      kHighlightLineLimitColumnBackcolorIfTabsSettingDefault);
 
+  auto& hwle = highlight_whitespaces_at_line_end_settings;
+  hwle.enabled =
+      storage.Get(0, kHighlightWhitespacesAtLineEndEnabledSettingName,
+                     kHighlightWhitespacesAtLineEndEnabledSettingDefault);
+  hwle.backcolor =
+      storage.Get(0, kHighlightWhitespacesAtLineEndBackcolorSettingName,
+                     kHighlightWhitespacesAtLineEndBackcolorSettingDefault);
+
   UpdateEditorFileNameMatchCache();
 }
 
@@ -69,7 +83,18 @@ void ConfigSettings::SaveToFarStorage() const {
   storage.Set(0, kHighlightLineLimitColumnBackcolorIfTabsSettingName,
                  hlcs.backcolor_if_tabs);
 
+  auto& hwle = highlight_whitespaces_at_line_end_settings;
+  storage.Set(0, kHighlightWhitespacesAtLineEndEnabledSettingName,
+                 hwle.enabled);
+  storage.Set(0, kHighlightWhitespacesAtLineEndBackcolorSettingName,
+                 hwle.backcolor);
+
   UpdateEditorFileNameMatchCache();
+}
+
+bool ConfigSettings::IsAtLeastOneFeatureOn() const {
+  return highlight_linelimit_column_settings.enabled ||
+         highlight_whitespaces_at_line_end_settings.enabled;
 }
 
 EditorFileNameMatchCache* ConfigSettings::editor_filename_match_cache() {
@@ -104,7 +129,7 @@ void ConfigSettings::UpdateEditorFileNameMatchCache() const {
 bool ConfigSettings::IsEditorFileNameMatchCacheUsable() const {
   // The cache makes sense only if 'file masks' setting is not empty and
   // at least one feature is on.
-  return !file_masks.empty() && highlight_linelimit_column_settings.enabled;
+  return !file_masks.empty() && IsAtLeastOneFeatureOn();
 }
 
 }  // namespace cc_assistant

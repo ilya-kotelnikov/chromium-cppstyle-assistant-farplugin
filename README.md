@@ -7,7 +7,9 @@ accordance to [Chromium C++ style guide](https://chromium.googlesource.com/chrom
 Current version features available for Far Manager's Editor:
 
   * configurable file masks of C++ source files to enable the features in;
-  * highlight column 80 in C++ source files with configurable colors.
+  * highlight column 80 in C++ source files with configurable colors;
+  * highlight whitespaces and tabs at line ends in C++ source files with
+    configurable color.
 
 Please see a short installation instructions in /package/README file.
 

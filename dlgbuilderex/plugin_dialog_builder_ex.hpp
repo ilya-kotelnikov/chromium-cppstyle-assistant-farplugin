@@ -41,6 +41,9 @@ class PluginDialogBuilderEx : public PluginDialogBuilder {
                         const wchar_t* help_topic);
   ~PluginDialogBuilderEx() override;
 
+  // Add a label with centered text.
+  FarDialogItem* AddCenteredText(const wchar_t* label);
+
   // Add a standard checkbox for an int variable (our version of the original
   // checkbox enables generic algorithms to manipulate the item).
   FarDialogItem* AddCheckboxItem(const wchar_t* label,

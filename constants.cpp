@@ -13,7 +13,7 @@ namespace cc_assistant {
 // Help topics.
 //
 // Note: keep consistent with "distrib/Options*.hlf" files' contents.
-// 
+//
 const wchar_t kMenuHelpTopic[] = L"Contents";
 const wchar_t kConfigHelpTopic[] = L"Configure";
 
@@ -31,7 +31,10 @@ const wchar_t kHighlightLineLimitColumnBackcolorSettingName[] =
     L"HighlightLineLimitColumnBackcolor";
 const wchar_t kHighlightLineLimitColumnBackcolorIfTabsSettingName[] =
     L"HighlightLineLimitColumnBackcolorIfTabs";
-
+const wchar_t kHighlightWhitespacesAtLineEndEnabledSettingName[] =
+    L"HighlightWhitespacesAtLineEndEnabled";
+const wchar_t kHighlightWhitespacesAtLineEndBackcolorSettingName[] =
+    L"HighlightWhitespacesAtLineEndBackcolor";
 const wchar_t kFileMasksSettingDefault[] = L"*.c;*.cc;*.cpp;*.h;*.hh;*.hpp;";
 
 }  // namespace cc_assistant

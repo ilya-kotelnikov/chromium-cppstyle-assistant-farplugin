@@ -76,12 +76,17 @@ bool ShowConfigDialog() {
   // later in case of dialog re-displaying.
   std::list<FarDialogItem*> inputs;
 
-  // Add common 'file masks' text edit field at the top.
+  // Add common 'file masks' text edit field at the top. And a help hint aligned
+  // by the edit field end.
   constexpr int kFileMasksEditFieldWidth = 40;
-  builder.AddText(kMFileMasksOption);
+  const wchar_t* help_hint_text = GetMsg(kMHelpHint);
+  FarDialogItem* help_hint_label =
+      builder.AddTextAfter(builder.AddText(kMFileMasksOption), help_hint_text);
   inputs.push_back(
       builder.AddStringEditFieldItem(&config_settings->file_masks,
                                      kFileMasksEditFieldWidth));
+  help_hint_label->X2 = inputs.back()->X1 + kFileMasksEditFieldWidth;
+  help_hint_label->X1 = help_hint_label->X2 - wcslen(help_hint_text);
   builder.AddSeparator();
 
   // Add "Highlight line-limit column" feature settings.
@@ -110,9 +115,9 @@ bool ShowConfigDialog() {
 
   // Add edits for colors: fore, back and back-if-tabs - each one on its own
   // line.
-  FarDialogItem* forecolor_item =
+  FarDialogItem* hlcs_forecolor_item =
       builder.AddColorEditFieldItem(&hlcs.forecolor);
-  inputs.push_back(forecolor_item);
+  inputs.push_back(hlcs_forecolor_item);
   subitems.push_back(inputs.back());
   subitems.push_back(
       builder.AddTextBefore(subitems.back(),
@@ -130,6 +135,25 @@ bool ShowConfigDialog() {
       builder.AddTextBefore(subitems.back(),
                             kMHighlightLineLimitColumnBackcolorIfTabsOption));
 
+  builder.AddSeparator();
+
+  // Add "Highlight whitespaces at line end" feature settings.
+  auto& hwle = config_settings->highlight_whitespaces_at_line_end_settings;
+
+  // Add the main setting normally.
+  inputs.push_back(
+      builder.AddCheckboxItem(
+          GetMsg(kMHighlightWhitespacesAtLineEndEnabledOption),
+          &hwle.enabled));
+  builder.AddEmptyLine();
+
+  // Add it's backcolor subsetting aligned with the main checkbox label.
+  inputs.push_back(builder.AddColorEditFieldItem(&hwle.backcolor));
+  subitems.push_back(inputs.back());
+  subitems.push_back(
+      builder.AddTextBefore(subitems.back(),
+                            kMHighlightWhitespacesAtLineEndBackcolorOption));
+
   // Finally shift all the subitems by 4 positions to right, so they are aligned
   // with the main checkbox label.
   for (FarDialogItem* item : subitems) {
@@ -139,7 +163,7 @@ bool ShowConfigDialog() {
 
   // Then align the color format label with the color edit fields.
   const int color_format_hint_dx =
-      forecolor_item->X1 - color_format_hint_item->X1;
+      hlcs_forecolor_item->X1 - color_format_hint_item->X1;
   color_format_hint_item->X1 += color_format_hint_dx;
   color_format_hint_item->X2 += color_format_hint_dx;
 
@@ -241,23 +265,16 @@ void ColorizeLinePositions(intptr_t editor_id, intptr_t line_index,
   ec.Flags = ECF_AUTODELETE;
   ec.Color.Flags = 0;
   ec.Color.ForegroundColor = forecolor;
-  ec.Color.BackgroundColor = backcolor; 
+  ec.Color.BackgroundColor = backcolor;
   ec.Owner = g_plugin_guid;
   g_psi().EditorControl(editor_id, ECTL_ADDCOLOR, 0, &ec);
 }
 
-void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {    
+void HighlightLineLimitColumnIfEnabled(const EditorInfo& editor_info) {
   auto& hlcs =
       ConfigSettings::GetInstance()->highlight_linelimit_column_settings;
-
   if (!hlcs.enabled)
     return;
-
-  if (!MatchEditorFileNameWithFileMasks(editor_id))
-    return;
-
-  EditorInfo editor_info = { sizeof(EditorInfo) };
-  g_psi().EditorControl(editor_id, ECTL_GETINFO, 0, &editor_info);
 
   // Optimization: do nothing if the column is out of screen at all.
   if (editor_info.LeftPos > static_cast<int>(hlcs.column_index) ||
@@ -271,107 +288,128 @@ void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
     if (curr_visible_line_index >= editor_info.TotalLines)
       break;
 
-    // Highlight line-limit column.
-    // Watch for tabs in the line: ensure the target column is right.
+    // Watch for tabs in the line: ensure the target position is right.
     const intptr_t text_position_to_highlight =
-        GetLineTextPositionCorrespondingToScreenOne(editor_id,
+        GetLineTextPositionCorrespondingToScreenOne(editor_info.EditorID,
                                                     curr_visible_line_index,
                                                     hlcs.column_index);
     const bool tabs_detected =
         (text_position_to_highlight != static_cast<int>(hlcs.column_index));
 
-    ColorizeLinePositions(editor_id,
+    ColorizeLinePositions(editor_info.EditorID,
                           curr_visible_line_index,
                           text_position_to_highlight,
                           text_position_to_highlight,
                           hlcs.forecolor,
                           (tabs_detected) ? hlcs.backcolor_if_tabs
                                           : hlcs.backcolor);
+  }
+}
 
-    // Highlight whitespaces at line end.
+void HighlightWhitespacesAtLineEndsIfEnabled(const EditorInfo& editor_info) {
+  auto& hwle =
+      ConfigSettings::GetInstance()->highlight_whitespaces_at_line_end_settings;
+  if (!hwle.enabled)
+    return;
+
+  // Forecolor may have any value as whitespaces/tabs are not "visible"
+  // usually (though Far has an option to show whitespaces/tabs with
+  // special symbols, but then our feature loses any sense and may be
+  // simply turned off).
+  constexpr COLORREF kHighlightWhitespaceForecolor = 0x00ffffff;
+
+  for (intptr_t i = 0; i < editor_info.WindowSizeY; ++i) {
+    const intptr_t curr_visible_line_index = editor_info.TopScreenLine + i;
+    if (curr_visible_line_index >= editor_info.TotalLines)
+      break;
+
     EditorGetString egs = { sizeof(EditorGetString) };
     egs.StringNumber = curr_visible_line_index;
-    if (g_psi().EditorControl(editor_id, ECTL_GETSTRING, 0, &egs)) {
-      // Forecolor may have any value as whitespaces/tabs are not "visible"
-      // usually (though Far has an option to show whitespaces/tabs with
-      // special symbols, but then our feature loses any sense and may be
-      // simply turned off).
-      constexpr COLORREF kHighlightWhitespaceForecolor = 0x00ffffff;
-      constexpr COLORREF kHighlightWhitespaceBackcolor = 0x007f00ff;
+    if (!g_psi().EditorControl(editor_info.EditorID, ECTL_GETSTRING, 0, &egs))
+      break;
 
-      // Skip empty lines.
-      const wchar_t* line_postend_ptr = egs.StringText + egs.StringLength;
-      if (line_postend_ptr > egs.StringText) {
-        // Scan the line from its end: look for whitespaces/tabs and stop just
-        // after the first non-whitespace symbol.
-        const wchar_t* line_first_whitespace_ptr = line_postend_ptr;
-        do {
-          const wchar_t c = *(line_first_whitespace_ptr - 1);
-          if (c != ' ' && c != '\t')
-             break;
-        } while (--line_first_whitespace_ptr != egs.StringText);
+    // Skip empty lines.
+    if (egs.StringLength <= 0)
+      continue;
 
-        // If found some whitespaces, then colorize the positions.
-        if (line_first_whitespace_ptr != line_postend_ptr) {
-          intptr_t whitespaces_start_pos =
-              line_first_whitespace_ptr - egs.StringText;
-          intptr_t whitespaces_postend_pos = line_postend_ptr - egs.StringText;
+    // Scan the line from its end: look for whitespaces/tabs and stop just
+    // after the first non-whitespace symbol.
+    const wchar_t* line_postend_ptr = egs.StringText + egs.StringLength;
+    const wchar_t* line_first_whitespace_ptr = line_postend_ptr;
+    do {
+      const wchar_t c = *(line_first_whitespace_ptr - 1);
+      if (c != ' ' && c != '\t')
+        break;
+    } while (--line_first_whitespace_ptr != egs.StringText);
 
-          // No highlight before cursor to avoid "blinking" while user is typing
-          // a new text (but only while cursor is not in a "free flight").
-          if (curr_visible_line_index == editor_info.CurLine) {
-            const bool cursor_beyond_eol =
-                (editor_info.Options & EOPT_CURSORBEYONDEOL) ==
-                    EOPT_CURSORBEYONDEOL &&
-                editor_info.CurPos > whitespaces_postend_pos;
+    if (line_first_whitespace_ptr == line_postend_ptr)
+      continue;  // no whitespaces at the line end.
 
-            if (!cursor_beyond_eol &&
-                whitespaces_start_pos < editor_info.CurPos) {
-              whitespaces_start_pos = editor_info.CurPos;
-            }
-          }
+    // Found some whitespaces -> colorize the positions.
+    intptr_t whitespaces_start_pos = line_first_whitespace_ptr - egs.StringText;
+    intptr_t whitespaces_postend_pos = line_postend_ptr - egs.StringText;
 
-          if (whitespaces_start_pos < whitespaces_postend_pos) {
-            // Exclude text selection as it already "highlights" whitespaces in
-            // its own way.
-            if (egs.SelStart >= 0) {
-              if (whitespaces_start_pos < egs.SelStart) {
-                ColorizeLinePositions(editor_id,
-                                      curr_visible_line_index,
-                                      whitespaces_start_pos,
-                                      egs.SelStart - 1,
-                                      kHighlightWhitespaceForecolor,
-                                      kHighlightWhitespaceBackcolor);
-              }
+    // No highlight before cursor to avoid "blinking" while user is typing a new
+    // text (but only while cursor is not in a "free flight").
+    if (curr_visible_line_index == editor_info.CurLine) {
+      const bool cursor_beyond_eol =
+          (editor_info.Options & EOPT_CURSORBEYONDEOL) ==
+              EOPT_CURSORBEYONDEOL &&
+          editor_info.CurPos > whitespaces_postend_pos;
 
-              if (egs.SelEnd >= 0 && whitespaces_postend_pos > egs.SelEnd) {
-                if (whitespaces_start_pos < egs.SelEnd)
-                  whitespaces_start_pos = egs.SelEnd;
-              } else {
-                whitespaces_start_pos = whitespaces_postend_pos;
-              }
-            }
+      if (!cursor_beyond_eol && whitespaces_start_pos < editor_info.CurPos)
+        whitespaces_start_pos = editor_info.CurPos;
 
-            if (whitespaces_start_pos < whitespaces_postend_pos) {
-              ColorizeLinePositions(editor_id,
-                                    curr_visible_line_index,
-                                    whitespaces_start_pos,
-                                    whitespaces_postend_pos - 1,
-                                    kHighlightWhitespaceForecolor,
-                                    kHighlightWhitespaceBackcolor);
-            }
-          }
-        }
+      if (whitespaces_start_pos >= whitespaces_postend_pos)
+        continue;  // nothing to highlight after the cursor.
+    }
+
+    // Exclude text selection as it already "highlights" whitespaces in its own
+    // way.
+    if (egs.SelStart >= 0 && egs.SelStart < whitespaces_postend_pos) {
+      if (whitespaces_start_pos < egs.SelStart) {
+        // Some whitespaces appear before the selection -> highlight them.
+        ColorizeLinePositions(editor_info.EditorID, curr_visible_line_index,
+                              whitespaces_start_pos, egs.SelStart - 1,
+                              kHighlightWhitespaceForecolor, hwle.backcolor);
+      }
+
+      if (egs.SelEnd >= 0 && whitespaces_postend_pos > egs.SelEnd) {
+        // Some whitespaces appear after the selection -> highlight them by the
+        // general colorizing call bellow (just update the start position here).
+        if (whitespaces_start_pos < egs.SelEnd)
+          whitespaces_start_pos = egs.SelEnd;
+      } else {
+        continue;  // nothing to highlight after the selection.
       }
     }
+
+    // Finally hightlight what left of all the initially found whitespaces.
+    ColorizeLinePositions(editor_info.EditorID, curr_visible_line_index,
+                          whitespaces_start_pos, whitespaces_postend_pos - 1,
+                          kHighlightWhitespaceForecolor, hwle.backcolor);
   }
+}
+
+void HandleEditorRedrawEvent(intptr_t editor_id) {
+  if (!ConfigSettings::GetInstance()->IsAtLeastOneFeatureOn())
+    return;
+
+  if (!MatchEditorFileNameWithFileMasks(editor_id))
+    return;
+
+  EditorInfo editor_info = { sizeof(EditorInfo) };
+  g_psi().EditorControl(editor_id, ECTL_GETINFO, 0, &editor_info);
+
+  HighlightLineLimitColumnIfEnabled(editor_info);
+  HighlightWhitespacesAtLineEndsIfEnabled(editor_info);
 }
 
 }  // namespace cc_assistant
 
 ////////////////////////////////////////////////////////////////////////////////
 // Plugin DLL exported routines for calls made by Far.
-// 
+//
 
 extern "C" void WINAPI GetGlobalInfoW(GlobalInfo* info) {
   info->StructSize = sizeof(GlobalInfo);
@@ -486,7 +524,7 @@ extern "C" intptr_t WINAPI ProcessEditorEventW(
     const ProcessEditorEventInfo* info) {
   switch (info->Event) {
     case EE_REDRAW:
-      cc_assistant::HighlightLineLimitColumnIfEnabled(info->EditorID);
+      cc_assistant::HandleEditorRedrawEvent(info->EditorID);
       break;
 
     case EE_GOTFOCUS:

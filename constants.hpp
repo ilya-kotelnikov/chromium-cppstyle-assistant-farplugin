@@ -26,6 +26,8 @@ extern const wchar_t kHighlightLineLimitColumnIndexSettingName[];
 extern const wchar_t kHighlightLineLimitColumnForecolorSettingName[];
 extern const wchar_t kHighlightLineLimitColumnBackcolorSettingName[];
 extern const wchar_t kHighlightLineLimitColumnBackcolorIfTabsSettingName[];
+extern const wchar_t kHighlightWhitespacesAtLineEndEnabledSettingName[];
+extern const wchar_t kHighlightWhitespacesAtLineEndBackcolorSettingName[];
 
 extern const wchar_t kFileMasksSettingDefault[];
 constexpr int kHighlightLineLimitColumnEnabledSettingDefault = 1;
@@ -37,5 +39,8 @@ constexpr COLORREF kHighlightLineLimitColumnBackcolorSettingDefault =
     RGB(0x00, 0x00, 0x00);  // Black.
 constexpr COLORREF kHighlightLineLimitColumnBackcolorIfTabsSettingDefault =
     RGB(0xff, 0x00, 0x00);  // Red.
+constexpr int kHighlightWhitespacesAtLineEndEnabledSettingDefault = 1;
+constexpr COLORREF kHighlightWhitespacesAtLineEndBackcolorSettingDefault =
+    RGB(0xff, 0x00, 0xff);  // Magenta.
 
 }  // namespace cc_assistant

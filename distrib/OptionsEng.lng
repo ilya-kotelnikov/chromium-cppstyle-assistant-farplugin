@@ -11,5 +11,10 @@
 "Backcolor:       "
 "Backcolor if tab:"
 
+"Highlight whitespaces at line ends"
+"Backcolor:       "
+
 "Save"
 "Cancel"
+
+"/F1 for help/"
