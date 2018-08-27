@@ -1,0 +1,19 @@
+To install the plugin please unpack the zip of your choice into
+Far Manager 3.0.5254 (or higher) installation folder. The typical path of 64bit
+Far Manager application is:
+
+C:\Program Files\Far Manager\Plugins\Chromium-CppStyle-Assistant\
+
+The same path is typical for 32bit Far Manager application installed on a 32bit
+Windows. But if 32bit Far Manager application is installed on a 64bit Windows,
+then the typical path is:
+
+C:\Program Files (x86)\Far Manager\Plugins\Chromium-CppStyle-Assistant\
+
+Please choose the plugin package file depending on your Far Manager installation
+bitness: ...x32.zip for 32bit Far, ...x64.zip for 64bit Far.
+
+After Far Manager restart the plugin should appear in its Editor's menu:
+open any file for editing (F4) and then open the menu with plugins (F11) -
+"Chromium C++ Assistant" should be listed there - select and enter it to
+see configuration dialog.

@@ -12,6 +12,7 @@
 extern "C" {
 
 int _wcsicmp(const wchar_t* lhs, const wchar_t* rhs);
+wchar_t* wcscpy(wchar_t* dst, const wchar_t* src);
 
 // Note: the implementation of the routine assumes that |dst| is 4-bytes aligned
 // which should be generally true if it was allocated by typical operator new()

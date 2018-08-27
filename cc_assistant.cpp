@@ -233,8 +233,9 @@ void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
   g_psi().EditorControl(editor_id, ECTL_GETINFO, 0, &editor_info);
 
   // Optimization: do nothing if the column is out of screen at all.
-  if (editor_info.LeftPos > hlcs.column_index ||
-      editor_info.LeftPos + editor_info.WindowSizeX < hlcs.column_index) {
+  if (editor_info.LeftPos > static_cast<int>(hlcs.column_index) ||
+      editor_info.LeftPos + editor_info.WindowSizeX <
+          static_cast<int>(hlcs.column_index)) {
     return;
   }
 
@@ -249,7 +250,8 @@ void HighlightLineLimitColumnIfEnabled(intptr_t editor_id) {
     ecp.SrcPos = hlcs.column_index;
     g_psi().EditorControl(editor_id, ECTL_TABTOREAL, 0, &ecp);
     const intptr_t adjusted_column_index = ecp.DestPos;
-    const bool tabs_detected = (adjusted_column_index != hlcs.column_index);
+    const bool tabs_detected =
+        (adjusted_column_index != static_cast<int>(hlcs.column_index));
 
     EditorColor ec = { sizeof(EditorColor) };
     ec.StringNumber = curr_visible_line_index;

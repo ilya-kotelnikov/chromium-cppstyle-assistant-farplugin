@@ -1,13 +1,17 @@
-# Chromium CppStyle Assistant #
-A plugin for FarManager application, written in C++.
+# Chromium C++ Assistant #
+A plugin for Far Manager application, written in C++.
 
-It is supposed to assist a C++ developer using FarManager as IDE to code in
+It is supposed to assist a C++ developer using Far Manager as IDE to code in
 accordance to [Chromium C++ style guide](https://chromium.googlesource.com/chromium/src/+/master/styleguide/c++/c++.md).
 
-Current version features available for FarManager's Editor:
+Current version features available for Far Manager's Editor:
 
-  * permanently highlight column 80;
-  * watch for whitespaces appearing at line ends and highlight them.
+  * configurable file masks of C++ source files to enable the features in;
+  * highlight column 80 in C++ source files with configurable colors.
+
+Please see a short installation instructions in /package/README file.
+
+Important note: the plugin requires Far Manager 3.0.5254 or higher!
            
 --------------------------------------------------------------------------------
           

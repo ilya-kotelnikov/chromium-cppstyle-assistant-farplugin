@@ -15,6 +15,10 @@ int _wcsicmp(const wchar_t* lhs, const wchar_t* rhs) {
   return ::lstrcmpiW(lhs, rhs);
 }
 
+wchar_t* wcscpy(wchar_t* dst, const wchar_t* src) {
+  return ::lstrcpyW(dst, src);
+}
+
 void* memset(void* dst, int val, size_t size) {
   static_assert(sizeof(unsigned long) == 4);
 

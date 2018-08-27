@@ -87,11 +87,11 @@ CCWIDE = -D UNICODE -D _UNICODE
 RCWIDE = -D UNICODE -D _UNICODE
 
 ifndef DEBUG
-DIRNAME := final
+DIRNAME := out.final
 C_DEBUG := -Os -fomit-frame-pointer -D NDEBUG
 L_DEBUG := -s
 else
-DIRNAME := debug
+DIRNAME := out.debug
 C_DEBUG := -O0 -g -D _DEBUG
 L_DEBUG := -O0 -g
 endif
@@ -132,7 +132,11 @@ RES = $(OBJDIR)/$(NAME_SHORT).res.o
 MAP = $(patsubst %.$(EXT),%.map,$(DLLFULLNAME))
 MAP_OPT = -Xlinker -Map -Xlinker $(MAP)
 
-STDLIBFLAGS = $(if $(MINICRT),-nostdlib -e DllMain,-static-libgcc)
+ifdef MINICRT
+STDLIBFLAGS := -nostdlib -e $(if $(findstring 32,$(DIRBIT)),_DllMain,DllMain)
+else
+STDLIBFLAGS := -static-libgcc
+endif
 
 C_FLAGS  := -m$(DIRBIT) $(C_DEBUG) -Wall \
             -funsigned-char -fstrict-aliasing -fno-exceptions
