@@ -7,11 +7,11 @@
 
 #include <FarVersion.hpp>
 
-#define PLUGIN_BUILD 3
-#define PLUGIN_NAME L"Chromium CppStyle Assistant"
-#define PLUGIN_DESC L"Chromium C++ style assistant for FarManager"
+#define PLUGIN_BUILD 4
+#define PLUGIN_NAME L"CCAssistant"
+#define PLUGIN_DESC L"Chromium C++ codestyle assistant"
 #define PLUGIN_AUTHOR L"ilya.kotelnikov@gmail.com"
-#define PLUGIN_FILENAME L"Chromium-CppStyle-Assistant.dll"
+#define PLUGIN_FILENAME L"CCAssistant.dll"
 #define PLUGIN_VERSION MAKEFARVERSION(FARMANAGERVERSION_MAJOR, \
                                       FARMANAGERVERSION_MINOR, \
                                       FARMANAGERVERSION_BUILD, \

@@ -6,9 +6,9 @@
 # USE_PROTOZOA_STL=1  - build the library with STL replacement classes (makes
 #                       sense only without MINICRT).
 #
-NAME = Chromium-CppStyle-Assistant
-NAME_SHORT = cc_assistant
-SRCS = cc_assistant.cpp \
+NAME = CCAssistant
+MAIN_CPPFILE_TITLE = cc_assistant
+SRCS = $(MAIN_CPPFILE_TITLE).cpp \
        config_settings.cpp \
        constants.cpp \
        dlgbuilderex/bindings/color_edit_field_item_binding.cpp \
@@ -118,7 +118,7 @@ DLLNAME = $(NAME).$(EXT)
 DLLFULLNAME = $(DLLDIR)/$(DLLNAME)
 
 ifndef DEF_NAME
-DEF_NAME = $(NAME_SHORT)
+DEF_NAME = $(MAIN_CPPFILE_TITLE)
 endif
 ifeq ($(DEF_NAME),-)
 DEF =
@@ -126,8 +126,8 @@ else
 DEF = $(DEF_NAME).def
 endif
 
-RC_NAME ?= $(NAME_SHORT)
-RES = $(OBJDIR)/$(NAME_SHORT).res.o
+RC_NAME ?= $(MAIN_CPPFILE_TITLE)
+RES = $(OBJDIR)/$(MAIN_CPPFILE_TITLE).res.o
 
 MAP = $(patsubst %.$(EXT),%.map,$(DLLFULLNAME))
 MAP_OPT = -Xlinker -Map -Xlinker $(MAP)

@@ -1,4 +1,4 @@
-# Chromium C++ Assistant #
+# CCAssistant: Chromium C++ Assistant #
 A plugin for Far Manager application, written in C++.
 
 It is supposed to assist a C++ developer using Far Manager as IDE to code in
