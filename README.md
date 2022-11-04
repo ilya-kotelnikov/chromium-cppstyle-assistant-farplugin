@@ -13,7 +13,7 @@ Current version features available for Far Manager's Editor:
 
 Please see a short installation instructions in /package/README file.
 
-Important note: the plugin requires Far Manager 3.0.5254 or higher!
+Important note: the plugin requires Far Manager 3.0.5979 or higher!
            
 --------------------------------------------------------------------------------
           

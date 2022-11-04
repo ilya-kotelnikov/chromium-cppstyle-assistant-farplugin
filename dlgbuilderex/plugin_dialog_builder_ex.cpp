@@ -35,8 +35,7 @@ PluginDialogBuilderEx::PluginDialogBuilderEx(
                           title_msg_id, help_topic) {
 }
 
-PluginDialogBuilderEx::~PluginDialogBuilderEx() {
-}
+PluginDialogBuilderEx::~PluginDialogBuilderEx() = default;
 
 FarDialogItem* PluginDialogBuilderEx::AddCenteredText(const wchar_t* label) {
   FarDialogItem* item = PluginDialogBuilder::AddText(label);

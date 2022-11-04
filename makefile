@@ -25,7 +25,7 @@ SRCS += protozoa/crt/crt_gcc.cpp \
 endif
 
 # System stuff (copied and adapted from Far sources).
-TOOLSDIR = far/buildtools/
+TOOLSDIR = ./far/buildtools/
 
 ifneq ($(shell echo %comspec%),%comspec%)
  os_name = $(subst /,\,$(1))
@@ -46,11 +46,11 @@ else
  endif
 endif
 
-LS=$(UTILS_PREFIX)ls
-MKDIR = $(UTILS_PREFIX)mkdir -p
-RM = $(UTILS_PREFIX)rm -f
-CP = $(UTILS_PREFIX)cp -f
-MV = $(UTILS_PREFIX)mv -f
+LS=$(UTILS_PREFIX) ls
+MKDIR = $(UTILS_PREFIX) mkdir -p
+RM = $(UTILS_PREFIX) rm -f
+CP = $(UTILS_PREFIX) cp -f
+MV = $(UTILS_PREFIX) mv -f
 
 CXX = $(GCC_PREFIX)g++$(DW2)
 CC = $(GCC_PREFIX)gcc$(DW2)
@@ -113,6 +113,7 @@ OBJDIR := $(BASEDIR)/obj
 REOBJDIR = \.\/$(DIRNAME)\.$(DIRBIT)\.gcc\/obj\/
 DLLDIR ?= $(BASEDIR)$(ADDOUTDIR)
 COMINC = far/pluginapi
+COMUNIINC = far/pluginapi/unicode
 EXT ?= dll
 DLLNAME = $(NAME).$(EXT)
 DLLFULLNAME = $(DLLDIR)/$(DLLNAME)
@@ -140,14 +141,14 @@ endif
 
 C_FLAGS  := -m$(DIRBIT) $(C_DEBUG) -Wall \
             -funsigned-char -fstrict-aliasing -fno-exceptions
-CXXFLAGS := $(C_FLAGS) -std=c++1z -fno-rtti \
-            -I . -I $(COMINC) $(CXXWIDE) $(USERCPP)
+CXXFLAGS := $(C_FLAGS) -std=c++17 -fno-rtti \
+            -I . -I $(COMINC) -I $(COMUNIINC) $(CXXWIDE) $(USERCPP)
 CCFLAGS  := $(C_FLAGS) \
-            -I . -I $(COMINC) $(CCWIDE) $(USERCPP)
+            -I . -I $(COMINC) -I $(COMUNIINC) $(CCWIDE) $(USERCPP)
 LNKFLAGS := -m$(DIRBIT) $(L_DEBUG) $(STDLIBFLAGS) -static -shared \
             -Wl,--kill-at -Wl,--enable-stdcall-fixup $(MAP_OPT) \
             -luser32 -lkernel32 -ladvapi32 -lshell32 -lole32 $(USERLIBS)
-RCFLAGS  := -I $(COMINC) $(RCWIDE) $(USERRC)
+RCFLAGS  := -I $(COMINC) -I $(COMUNIINC) $(RCWIDE) $(USERRC)
 
 C_OBJS = $(patsubst %.c,$(OBJDIR)/%.o,$(filter %.c,$(SRCS)))
 CPP_OBJS = $(patsubst %.cpp,$(OBJDIR)/%.o,$(filter %.cpp,$(SRCS)))
@@ -194,7 +195,7 @@ $(OBJDIR)/%.o: %.c
 	@$(MKDIR) -p $(@D)
 	@$(CC) $(CCFLAGS) -c -o $@ $<
 
-$(RES): $(RC_NAME).rc $(COMINC)/FarVersion.hpp $(COMINC)/Plugin.hpp
+$(RES): $(RC_NAME).rc $(COMINC)/plugin_version.rc $(COMINC)/farversion.hpp $(COMUNIINC)/plugin.hpp 
 	@echo compiling $<
 	@$(MKDIR) -p $(@D)
 	@$(WINDRES) $(RCFLAGS) -i $< -o $@

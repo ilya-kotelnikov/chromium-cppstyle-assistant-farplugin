@@ -1,14 +1,19 @@
 The folder contains a minimal copy of FarManager sources/tools required to build
-the plugin sources. 
+the plugin sources.
 
 FarManager sources (minimal download, just the particular release):
-git clone --branch builds/3.0.5254 --depth 1 https://github.com/FarGroup/FarManager.git
+git clone --branch builds/3.0.5979 --depth 1 https://github.com/FarGroup/FarManager.git
 
 |buildtools
-    <-- FarManager/scripts/gnu.cmd
-    <-- FarManager/tools/dep_filter.awk
-    <-- FarManager/tools/gawk.exe
-    <-- FarManager/tools/libiconv2.dll
-    <-- FarManager/tools/libintl3.dll
+    gnu.cmd        <-- FarManager/far/scripts/gnu.cmd
+    dep_filter.awk
+    gawk.exe       <-- FarManager/far/tools/gawk.exe
+    libiconv2.dll  <-- FarManager/far/tools/libiconv2.dll
+    libintl3.dll   <-- FarManager/far/tools/libintl3.dll
 |pluginapi
-    <-- FarManager/plugins/common/unicode
+    |unicode
+        * <-- FarManager/plugins/common/unicode/*
+    farversion.hpp    <-- FarManager/plugins/common/farversion.hpp
+    plugin_version.rc <-- FarManager/plugins/common/plugin_version.rc
+
+After updating files from the FarManager sources do apply "far_fix.patch".

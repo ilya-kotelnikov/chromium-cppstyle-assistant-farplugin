@@ -19,7 +19,7 @@ PluginStartupInfo& g_psi(const PluginStartupInfo* psi_to_init_from) {
   static FarStandardFunctions fsf;
 
   bool the_first_call = false;
-  static bool initialized_threadsafely __attribute__((unused)) = ([&]() {
+  static bool initialized_threadsafely [[maybe_unused]] = ([&]() {
     // The first call to this function MUST pass the argument provided by Far.
     assert(psi_to_init_from != nullptr);
 

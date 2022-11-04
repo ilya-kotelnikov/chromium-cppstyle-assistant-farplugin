@@ -39,7 +39,7 @@ class PluginDialogBuilderEx : public PluginDialogBuilder {
                         const GUID& dialog_guid,
                         int title_msg_id,
                         const wchar_t* help_topic);
-  ~PluginDialogBuilderEx() override;
+  ~PluginDialogBuilderEx();
 
   // Add a label with centered text.
   FarDialogItem* AddCenteredText(const wchar_t* label);

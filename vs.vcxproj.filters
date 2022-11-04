@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{8afd3a72-b84d-4e89-ab77-cd12927915bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\far">
+      <UniqueIdentifier>{2e1ddbf0-c0bb-43bf-93ad-02e4f168f1aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\far\pluginapi">
+      <UniqueIdentifier>{3f58d2bb-c3cb-448c-8c34-af4df5a29c98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\far\pluginapi\unicode">
+      <UniqueIdentifier>{8fd64a61-f2de-4ebf-8da2-22baa62820a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\dlgbuilderex">
+      <UniqueIdentifier>{9a7f942a-f7f6-45be-b4ef-10f7b99705f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\dlgbuilderex\bindings">
+      <UniqueIdentifier>{51c9f1b1-7919-4b3f-8e81-fc057c21cbbd}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="cc_assistant.rc">
+      <Filter>Source Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="assert.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="config_settings.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="constants.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor_filename_match_cache.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="globals.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="localized_strings_ids.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="version.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="far\pluginapi\farversion.hpp">
+      <Filter>Source Files\far\pluginapi</Filter>
+    </ClInclude>
+    <ClInclude Include="far\pluginapi\unicode\DlgBuilder.hpp">
+      <Filter>Source Files\far\pluginapi\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="far\pluginapi\unicode\farcolor.hpp">
+      <Filter>Source Files\far\pluginapi\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="far\pluginapi\unicode\plugin.hpp">
+      <Filter>Source Files\far\pluginapi\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="far\pluginapi\unicode\PluginSettings.hpp">
+      <Filter>Source Files\far\pluginapi\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="far\pluginapi\unicode\SimpleString.hpp">
+      <Filter>Source Files\far\pluginapi\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="dlgbuilderex\plugin_dialog_builder_ex.hpp">
+      <Filter>Source Files\dlgbuilderex</Filter>
+    </ClInclude>
+    <ClInclude Include="dlgbuilderex\bindings\checkbox_item_binding.hpp">
+      <Filter>Source Files\dlgbuilderex\bindings</Filter>
+    </ClInclude>
+    <ClInclude Include="dlgbuilderex\bindings\color_edit_field_item_binding.hpp">
+      <Filter>Source Files\dlgbuilderex\bindings</Filter>
+    </ClInclude>
+    <ClInclude Include="dlgbuilderex\bindings\generic_edit_field_item_binding.hpp">
+      <Filter>Source Files\dlgbuilderex\bindings</Filter>
+    </ClInclude>
+    <ClInclude Include="dlgbuilderex\bindings\item_binding.hpp">
+      <Filter>Source Files\dlgbuilderex\bindings</Filter>
+    </ClInclude>
+    <ClInclude Include="dlgbuilderex\bindings\string_edit_field_item_binding.hpp">
+      <Filter>Source Files\dlgbuilderex\bindings</Filter>
+    </ClInclude>
+    <ClInclude Include="dlgbuilderex\bindings\uint_edit_field_item_binding.hpp">
+      <Filter>Source Files\dlgbuilderex\bindings</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="cc_assistant.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="config_settings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="constants.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor_filename_match_cache.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="globals.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dlgbuilderex\plugin_dialog_builder_ex.cpp">
+      <Filter>Source Files\dlgbuilderex</Filter>
+    </ClCompile>
+    <ClCompile Include="dlgbuilderex\bindings\color_edit_field_item_binding.cpp">
+      <Filter>Source Files\dlgbuilderex\bindings</Filter>
+    </ClCompile>
+    <ClCompile Include="dlgbuilderex\bindings\uint_edit_field_item_binding.cpp">
+      <Filter>Source Files\dlgbuilderex\bindings</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cc_assistant.def">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

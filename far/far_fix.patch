@@ -1,0 +1,13 @@
+diff --git a/far/pluginapi/unicode/DlgBuilder.hpp b/far/pluginapi/unicode/DlgBuilder.hpp
+index ec12fb2..527c9eb 100644
+--- a/far/pluginapi/unicode/DlgBuilder.hpp
++++ b/far/pluginapi/unicode/DlgBuilder.hpp
+@@ -773,7 +773,7 @@ public:
+ 		return Result >= 0 && (m_CancelButtonID < 0 || Result + m_FirstButtonID != m_CancelButtonID);
+ 	}
+ 
+-private:
++protected:
+ 	void ReallocDialogItems()
+ 	{
+ 		// реаллокация инвалидирует указатели на DialogItemEx, возвращённые из

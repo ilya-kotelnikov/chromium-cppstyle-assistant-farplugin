@@ -46,7 +46,7 @@ class GenericEditFieldItemBinding : public EditFieldItemBinding {
         option_var_(option_var) {
   }
 
-  void SaveValue(FarDialogItem* item, int radio_group_index) override {
+  void SaveValue(FarDialogItem const* item, int radio_group_index) override {
     const wchar_t* current_edit_field_string_data =
         reinterpret_cast<const wchar_t*>(
             DialogAPIBinding::Info.SendDlgMessage(

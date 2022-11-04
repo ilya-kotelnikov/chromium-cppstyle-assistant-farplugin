@@ -1,1 +1,5 @@
-﻿/out.*/*
+﻿.vs
+vs.vcxproj.user
+*.aps
+/out.*/*
+/vs-out/*

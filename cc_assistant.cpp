@@ -162,7 +162,7 @@ bool ShowConfigDialog() {
   }
 
   // Then align the color format label with the color edit fields.
-  const int color_format_hint_dx =
+  const auto color_format_hint_dx =
       hlcs_forecolor_item->X1 - color_format_hint_item->X1;
   color_format_hint_item->X1 += color_format_hint_dx;
   color_format_hint_item->X2 += color_format_hint_dx;
@@ -264,8 +264,8 @@ void ColorizeLinePositions(intptr_t editor_id, intptr_t line_index,
   ec.Priority = EDITOR_COLOR_NORMAL_PRIORITY;
   ec.Flags = ECF_AUTODELETE;
   ec.Color.Flags = 0;
-  ec.Color.ForegroundColor = forecolor;
-  ec.Color.BackgroundColor = backcolor;
+  ec.Color.ForegroundColor = MAKE_OPAQUE(forecolor);
+  ec.Color.BackgroundColor = MAKE_OPAQUE(backcolor);
   ec.Owner = g_plugin_guid;
   g_psi().EditorControl(editor_id, ECTL_ADDCOLOR, 0, &ec);
 }

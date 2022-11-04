@@ -23,7 +23,7 @@ class CheckboxItemBinding : public ItemBinding {
         checked_state_value_mask_(checked_state_value_mask) {
   }
 
-  void SaveValue(FarDialogItem* item, int radio_group_index) override {
+  void SaveValue(FarDialogItem const* item, int radio_group_index) override {
     const int checked = static_cast<int>(
         DialogAPIBinding::Info.SendDlgMessage(
             *DialogAPIBinding::DialogHandle, DM_GETCHECK, DialogAPIBinding::ID,

@@ -5,9 +5,9 @@
 // You may use, distribute and modify this code under the terms of GNU GPLv3.
 //------------------------------------------------------------------------------
 
-#include <FarVersion.hpp>
+#include <farversion.hpp>
 
-#define PLUGIN_BUILD 4
+#define PLUGIN_BUILD 5
 #define PLUGIN_NAME L"CCAssistant"
 #define PLUGIN_DESC L"Chromium C++ codestyle assistant"
 #define PLUGIN_AUTHOR L"ilya.kotelnikov@gmail.com"
